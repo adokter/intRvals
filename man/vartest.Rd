@@ -29,11 +29,11 @@ The null hypothesis is that the ratio of the variances of the
 data to which the models \code{x} and \code{y} were fitted, is equal to ratio.
 }
 \examples{
-data(terschelling)
-dr=droprate(terschelling$interval)
+data(goosedrop)
+dr=droprate(goosedrop$interval)
 # split the interval data into two periods
-data.beforeMay=terschelling[terschelling$date<as.Date('2013-04-15'),]
-data.afterMay=terschelling[terschelling$date>as.Date('2013-04-15'),]
+data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
+data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
 dr.beforeMay=droprate(data.beforeMay$interval)
 dr.afterMay=droprate(data.afterMay$interval)
 # perform an F test

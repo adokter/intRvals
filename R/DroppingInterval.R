@@ -1,10 +1,23 @@
-terschelling=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_terschelling.csv",colClasses=c("Date","numeric"))
-save(terschelling,file="~/git/R/droprate/data/terschelling.RData")
+## open problem convergence:
+# this works:
+# dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal",mu=247,sigma=83)
+# this not:
+# dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal")
+
+
+
+terschelling=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_terschelling.csv",colClasses=c("POSIXct","numeric"))
+schiermonnikoog=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_schier.csv",colClasses=c("POSIXct","numeric"))
+terschelling$site="terschelling"
+schiermonnikoog$site="schiermonnikoog"
+goosedrop=rbind(terschelling,schiermonnikoog)
+#save(goosedrop,file="~/git/R/droprate/data/goosedrop.RData")
+load("~/git/R/droprate/data/goosedrop.RData")
 #' This is data to be included in my package
 #'
 #' @author Adriaan Dokter \email{a.m.dokter@uva.nl}
 #' @references \url{data_blah.com}
-"terschelling"
+"goosedrop"
 
 # normal distribution for (i-1) missed events component of the
 # probability density function (PDF)
@@ -39,8 +52,8 @@ logliknull=function(params,data,N,fun=normi) sum(log(probdens(data,params[1],par
 #' @export
 #' @return This function returns a list with data, corresponding to the model fit
 #' @examples
-#' data(terschelling)
-#' dr=droprate(terschelling$interval)
+#' data(goosedrop)
+#' dr=droprate(goosedrop$interval)
 #' plot(dr)
 #' plot(dr,binsize=10,line.col='blue')
 plot.droprate=function(object,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', ...){
@@ -63,11 +76,23 @@ plot.droprate=function(object,binsize=20,xlab="Interval",ylab="Density",main="In
 #' @export
 #' @return This function returns an object of class \code{droprate}
 #' @examples
-#' data(terschelling)
-#' dr=droprate(terschelling$interval)
+#' data(goosedrop)
+#' dr=droprate(goosedrop$interval)
 #' plot(dr)
 #' summary(dr)
-droprate=function(data,mu=mean(data),sigma=sd(data),p=0.2,N=5,fun="normal"){
+#'
+#' # let's analyze dropping intervals by site
+#' dr1=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval)
+#' dr2=droprate(goosedrop[goosedrop$site=="terschelling",]$interval)
+#'
+#' # The T test that accounts for missed observations shows the
+#' # mean dropping interval is not significantly different at the two sites:
+#' ttest(dr1,dr2)
+#' # not accounting for missed observations leads to the false
+#' # conclusion that the mean intervals are significantly different:
+#' t.test(dr1$data,dr2$data)
+#'
+droprate=function(data,mu=mean(data),sigma=sd(data)/2,p=0.2,N=5,fun="normal"){
   call=match.call()
   if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
   if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
@@ -77,6 +102,10 @@ droprate=function(data,mu=mean(data),sigma=sd(data),p=0.2,N=5,fun="normal"){
   opt=optim(par=c(mu,sigma,p.logit),loglikfn,data=data,N=N,fun=fun2use,control=list(fnscale=-1))
   optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=fun2use,control=list(fnscale=-1))
   out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],fractionMissed=plogis(opt$par[3]),N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-3),distribution=fun)
+  goodness.fit=pchisq(2*(out$loglik[1]-out$loglik[2]), df=out$df.residual[1], lower.tail=FALSE)
+  if(goodness.fit>0.05){
+    warning("model including a miss chance is not significant.\n\nCheck convergence using different starting values (arguments: mu,sigma and p), or change the interval distribution (argument fun)")
+  }
   class(out)="droprate"
   out
 }
@@ -87,14 +116,14 @@ droprate=function(data,mu=mean(data),sigma=sd(data),p=0.2,N=5,fun="normal"){
 #' @export
 #' @return The function \code{summary.droprate} computes and returns a list of summary statistics
 #' @examples
-#' data(terschelling)
-#' dr=droprate(terschelling$interval)
+#' data(goosedrop)
+#' dr=droprate(goosedrop$interval)
 #' summary(dr)
 summary.droprate=function(x){
   stopifnot(inherits(x, "droprate"))
   xx=x
-  xx$deviance=2*(xx$loglik[1]-xx$loglik[2])
-  xx$p.value=c(pchisq(xx$deviance, df=xx$df.residual[1], lower.tail=FALSE),pchisq(-xx$loglik, df=xx$df.residual[2], lower.tail=FALSE))
+  xx$deviance=c(2*(xx$loglik[1]-xx$loglik[2]),abs(2*xx$loglik[1]))
+  xx$p.value=c(pchisq(xx$deviance[1], df=xx$df.residual[1], lower.tail=FALSE),pchisq(xx$deviance[2], df=xx$df.residual[2], lower.tail=FALSE))
   class(xx)="summary.droprate"
   xx
 }
@@ -123,9 +152,10 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
   cat("\nCall: ", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
   cat("             distribution used: ",x$distribution,"\n")
   cat("           number of intervals: ",format(signif(length(x$data),digits)),"\n")
-  cat("                Log-likelihood: ",format(signif(x$loglik[2],digits)),"\n")
-  cat("             Residual deviance: ",format(signif(x$deviance))," on ", x$df.residual[2], "degrees of freedom\n")
+  cat("                Log-likelihood: ",format(signif(x$loglik[1],digits)),"\n")
+  cat("             Residual deviance: ",format(signif(x$deviance[1]))," on ", x$df.residual[1], "degrees of freedom\n")
   cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[1],digits)), "(against null model without miss chance)\n")
+  cat("             Residual deviance: ",format(signif(x$deviance[2]))," on ", x$df.residual[2], "degrees of freedom\n")
   cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[2],digits)), "(against saturated null model)\n\n")
   cat("               mean event rate: ",format(signif(x$mean,digits)),"\n")
   cat("            standard deviation: ",format(signif(x$stdev,digits)),"\n")
@@ -145,13 +175,13 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
 #' @export
 #' @return A list with class "\code{htest}" containing the same components as in \link[stats]{t.test}
 #' @examples
-#' data(terschelling)
-#' dr=droprate(terschelling$interval)
+#' data(goosedrop)
+#' dr=droprate(goosedrop$interval)
 #' # perform a one-sample t-test
 #' ttest(dr)
 #' # two sample t-test
-#' data.beforeMay=terschelling[terschelling$date<as.Date('2013-05-1'),]
-#' data.afterMay=terschelling[terschelling$date>as.Date('2013-05-1'),]
+#' data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
+#' data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
 #' dr.beforeMay=droprate(data.beforeMay$interval)
 #' dr.afterMay=droprate(data.afterMay$interval)
 #' ttest(dr.beforeMay,dr.afterMay)
@@ -271,11 +301,11 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
 #' @export
 #' @return A list with class "\code{htest}" containing the same components as in \link[stats]{var.test}
 #' @examples
-#' data(terschelling)
-#' dr=droprate(terschelling$interval)
+#' data(goosedrop)
+#' dr=droprate(goosedrop$interval)
 #' # split the interval data into two periods
-#' data.beforeMay=terschelling[terschelling$date<as.Date('2013-04-15'),]
-#' data.afterMay=terschelling[terschelling$date>as.Date('2013-04-15'),]
+#' data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
+#' data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
 #' dr.beforeMay=droprate(data.beforeMay$interval)
 #' dr.afterMay=droprate(data.afterMay$interval)
 #' # perform an F test

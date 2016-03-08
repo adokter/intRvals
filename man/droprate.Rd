@@ -4,7 +4,7 @@
 \alias{droprate}
 \title{Analyse event rate with missed event observations}
 \usage{
-droprate(data, mu = mean(data), sigma = sd(data), p = 0.2, N = 5,
+droprate(data, mu = mean(data), sigma = sd(data)/2, p = 0.2, N = 5,
   fun = "normal")
 }
 \arguments{
@@ -28,9 +28,21 @@ This function returns an object of class \code{droprate}
 Analyse event rate with missed event observations
 }
 \examples{
-data(terschelling)
-dr=droprate(terschelling$interval)
+data(goosedrop)
+dr=droprate(goosedrop$interval)
 plot(dr)
 summary(dr)
+
+# let's analyze dropping intervals by site
+dr1=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval)
+dr2=droprate(goosedrop[goosedrop$site=="terschelling",]$interval)
+
+# The T test that accounts for missed observations shows the
+# mean dropping interval is not significantly different at the two sites:
+ttest(dr1,dr2)
+# not accounting for missed observations leads to the false
+# conclusion that the mean intervals are significantly different:
+t.test(dr1$data,dr2$data)
+
 }
 

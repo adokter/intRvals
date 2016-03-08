@@ -16,8 +16,8 @@ The function \code{summary.droprate} computes and returns a list of summary stat
 summary method for class \code{droprate}
 }
 \examples{
-data(terschelling)
-dr=droprate(terschelling$interval)
+data(goosedrop)
+dr=droprate(goosedrop$interval)
 summary(dr)
 }
 

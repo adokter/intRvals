@@ -30,8 +30,8 @@ This function returns a list with data, corresponding to the model fit
 Plot an interval histogram and fit of droprate object
 }
 \examples{
-data(terschelling)
-dr=droprate(terschelling$interval)
+data(goosedrop)
+dr=droprate(goosedrop$interval)
 plot(dr)
 plot(dr,binsize=10,line.col='blue')
 }

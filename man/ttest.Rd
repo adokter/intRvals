@@ -32,13 +32,13 @@ Performs one and two sample t-tests on objects of class \code{droprate}
 If the input data are effectively constant (compared to the larger of the two means) an error is generated.
 }
 \examples{
-data(terschelling)
-dr=droprate(terschelling$interval)
+data(goosedrop)
+dr=droprate(goosedrop$interval)
 # perform a one-sample t-test
 ttest(dr)
 # two sample t-test
-data.beforeMay=terschelling[terschelling$date<as.Date('2013-05-1'),]
-data.afterMay=terschelling[terschelling$date>as.Date('2013-05-1'),]
+data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
+data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
 dr.beforeMay=droprate(data.beforeMay$interval)
 dr.afterMay=droprate(data.afterMay$interval)
 ttest(dr.beforeMay,dr.afterMay)
