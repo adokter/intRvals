@@ -12,8 +12,11 @@ while taking into account missed event observations
 }
 \details{
 The central function of package \pkg{droprate} is
-\code{\link{estinterval}}, which can be used to estimate
-event rates from interval data with missed events.
+\code{\link{estinterval}}, which can be used to estimate the
+mean event interval (and its standard deviation) from interval
+data with missed events. This is
+achieved by fitting the theoretical probability density
+\code{\link{intervalpdf}} to the interval data
 
 This package was designed initially for
 analysing dropping intervals of grazing geese, but can be used to analyse any
@@ -29,6 +32,7 @@ The package comes with a test dataset \code{\link{goosedrop}}
 }
 \references{
 Bédard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77–90.
+
 Dokter et al. 2016 ???
 }
 
