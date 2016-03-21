@@ -7,7 +7,7 @@
 \method{print}{droprate}(x, digits = max(3L, getOption("digits") - 3L))
 }
 \arguments{
-\item{x}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}}
+\item{x}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 }
 \description{
 print method for class \code{droprate}

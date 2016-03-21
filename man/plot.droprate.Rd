@@ -31,7 +31,7 @@ Plot an interval histogram and fit of droprate object
 }
 \examples{
 data(goosedrop)
-dr=droprate(goosedrop$interval)
+dr=estinterval(goosedrop$interval)
 plot(dr)
 plot(dr,binsize=10,line.col='blue')
 }

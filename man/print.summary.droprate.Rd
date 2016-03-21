@@ -8,7 +8,7 @@
   3L))
 }
 \arguments{
-\item{x}{An object of class \code{symmary.droprate}, usually a result of a call to \link[droprate]{summary.droprate}}
+\item{x}{An object of class \code{symmary.droprate}, usually a result of a call to \link[summary]{summary.droprate}}
 }
 \description{
 print method for class \code{summary.droprate}

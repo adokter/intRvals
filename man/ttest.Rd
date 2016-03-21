@@ -8,9 +8,9 @@ ttest(x, y = NULL, alternative = c("two.sided", "less", "greater"),
   mu = 0, var.equal = FALSE, conf.level = 0.95)
 }
 \arguments{
-\item{x}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}}
+\item{x}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
-\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}}
+\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
 \item{alternative}{a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.}
 
@@ -33,14 +33,14 @@ If the input data are effectively constant (compared to the larger of the two me
 }
 \examples{
 data(goosedrop)
-dr=droprate(goosedrop$interval)
+dr=estinterval(goosedrop$interval)
 # perform a one-sample t-test
 ttest(dr)
 # two sample t-test
 data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
 data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
-dr.beforeMay=droprate(data.beforeMay$interval)
-dr.afterMay=droprate(data.afterMay$interval)
+dr.beforeMay=estinterval(data.beforeMay$interval)
+dr.afterMay=estinterval(data.afterMay$interval)
 ttest(dr.beforeMay,dr.afterMay)
 
 }

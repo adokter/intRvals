@@ -7,7 +7,7 @@
 \method{summary}{droprate}(x)
 }
 \arguments{
-\item{x}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}}
+\item{x}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 }
 \value{
 The function \code{summary.droprate} computes and returns a list of summary statistics
@@ -17,7 +17,7 @@ summary method for class \code{droprate}
 }
 \examples{
 data(goosedrop)
-dr=droprate(goosedrop$interval)
+dr=estinterval(goosedrop$interval)
 summary(dr)
 }
 

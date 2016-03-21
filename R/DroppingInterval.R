@@ -1,10 +1,38 @@
+#' Analyse interval data with missed event observations
+#'
+#' Droprate allows you to calculate mean event intervals
+#' and compare means and variances of groups of interval data,
+#' while taking into account missed event observations
+#'
+#' The central function of package \pkg{droprate} is
+#' \code{\link{estinterval}}, which can be used to estimate
+#' event rates from interval data with missed events.
+#'
+#' This package was designed initially for
+#' analysing dropping intervals of grazing geese, but can be used to analyse any
+#' kind of interval data derived from distinct event observations.
+#' One interval is defined as the time between observing a dropping be excreted, until the time the
+#' next dropping is excreted. The package provides a way of taking into account missed observations
+#' (excreted droppings), which leads to occasional observed intervals at integer multiples of the
+#' true dropping interval.
+#'
+#' Sets of interval data can be compared using \code{\link{ttest}} and \code{\link{vartest}}
+#'
+#' The package comes with a test dataset \code{\link{goosedrop}}
+#'
+#' @references
+#' Bédard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77–90.
+#' Dokter et al. 2016 ???
+#'
+"_PACKAGE"
+#> [1] "_PACKAGE"
+
+
 ## open problem convergence:
 # this works:
 # dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal",mu=247,sigma=83)
 # this not:
 # dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal")
-
-
 
 terschelling=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_terschelling.csv",colClasses=c("POSIXct","numeric"))
 schiermonnikoog=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_schier.csv",colClasses=c("POSIXct","numeric"))
@@ -13,10 +41,14 @@ schiermonnikoog$site="schiermonnikoog"
 goosedrop=rbind(terschelling,schiermonnikoog)
 #save(goosedrop,file="~/git/R/droprate/data/goosedrop.RData")
 load("~/git/R/droprate/data/goosedrop.RData")
-#' This is data to be included in my package
+#' Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)
+#'
+#' The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
+#' Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
+#' The time in seconds between wo subsequent dropping events of a single individuals refers to one dropping interval.
+
 #'
 #' @author Adriaan Dokter \email{a.m.dokter@uva.nl}
-#' @references \url{data_blah.com}
 "goosedrop"
 
 # normal distribution for (i-1) missed events component of the
@@ -32,6 +64,61 @@ probdens=function(x,mu,sigma,p,N,fun=normi) {
   if(length(x)>1) return(rowSums(normsum(x,mu,sigma,p,N,fun=fun)))
   else return(sum(normsum(x,mu,sigma,p,N,fun=fun)))
 }
+
+#' Probability density function (PDF) of an observed interval distribution
+#'
+#' Observed intervals are assumed to be sampled through observation of continuous
+#' distinct events in time. Two subsequently observed events mark the start and end
+#' of an interval. The chance that an event is not observed can be nonzero, leading to
+#' observed intervals at integer multiples of the true interval.
+#'
+#' @param data A list of intervals for which to calculate the probability density
+#' @param mu The mean of the true interval distribution
+#' @param sigma The standard deviation of the true interval distribution
+#' @param p The chance that the event that defines the start or end of an interval is not observed
+#' @param N The maximum number of consecutive missed events to take into consideration
+#' @param fun assumed distribution family of the true interval distribution, one of
+#'  "\code{normal}" or "\code{gamma}", corresponding
+#' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.
+#' @export
+#' @return This function returns a list with data, corresponding to the model fit
+#' @details
+#' By default intervals x are assumed to follow a normal distribution \eqn{N(\mu,\sigma^2)}{N(\mu,\sigma^2)},
+#' with a probability density function \eqn{\phi(x)}:
+#' \deqn{\phi(x|\mu,\sigma^2)~N(\mu,\sigma^2)}{\phi(x|\mu,\sigma^2)~N(\mu,\sigma^2)}
+#' with \eqn{\mu} the average event interval and \eqn{\sigma} its associated standard deviation.
+#' The probability density function \eqn{\phi}obs of observed event intervals
+#' in a scenario where the chance to not observe an event is nonzero,
+#' will be a superposition of several normal distributions, at multiples of the fundamental mean
+#' event interval. Normal distribution \eqn{i} will correspond to those intervals where \eqn{i} events have been
+#' missed consecutively. If \eqn{p} equals this chance of not observing a dropping, then the
+#' probability \eqn{P(i)} to miss \eqn{i} consecutive droppings equals
+#' \deqn{P(i)=p^i-p^{i+1}}{P(i)=p^i-p^{i+1}}
+#' The width of normal distribution i will be broadened relative to the fundamental, according to
+#' standard uncertainty propagation in the case of addition, such that we may write for the observed PDF, \eqn{\phi{obs}}:
+#' \deqn{\phi_{obs}(x | \mu, \sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}{\phi{obs}(x | \mu,\sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}
+#' In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
+#' Be default the sum is ran up to N=5.
+#' @examples
+#' # a low miss chance results in an observed PDF
+#' # with primarily a single peak, with a mean and standard
+#' # deviation almost identical to the true interval
+#' # distribution:
+#' plot(intervalpdf(mu=200,sigma=40,p=0.01),type='l',col='red')
+#'
+#' # a higher miss chance results in an observed PDF with multiple
+#' #  peaks at integer multiples of the mean of the true
+#' # interval distribution
+#' plot(intervalpdf(mu=200,sigma=40,p=0.4),type='l',col='red')
+
+intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5,fun="normal"){
+  if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
+  if(fun=="normal") fun2use=normi
+  else fun2use=gammai
+  data.frame(interval=data,density=probdens(data,mu,sigma,p,N,fun=fun2use))
+}
+
+
 # log-likelihood
 loglik=function(data,mu,sigma,p,N,fun=normi) sum(log(probdens(data,mu,sigma,p,N,fun=fun)))
 # log-likelihood, with parameters to be optimised in list params
@@ -53,7 +140,7 @@ logliknull=function(params,data,N,fun=normi) sum(log(probdens(data,params[1],par
 #' @return This function returns a list with data, corresponding to the model fit
 #' @examples
 #' data(goosedrop)
-#' dr=droprate(goosedrop$interval)
+#' dr=estinterval(goosedrop$interval)
 #' plot(dr)
 #' plot(dr,binsize=10,line.col='blue')
 plot.droprate=function(object,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', ...){
@@ -64,35 +151,39 @@ plot.droprate=function(object,binsize=20,xlab="Interval",ylab="Density",main="In
   curve(probdens(x,object$mean,object$stdev,object$fractionMissed,object$N,fun=fun2use),0,1500,col=line.col,add=T)
 }
 
-#' Analyse event rate with missed event observations
+#' Estimate interval mean and variance accounting for missed event observations
 #'
 #' @param data A numeric list of intervals.
 #' @param mu Start value for the numeric optimization for the mean interval rate.
 #' @param sigma Start value for the numeric optimization for the standard deviation of the interval rate.
 #' @param p Start value for the numeric optimization for the chance to miss an observation of an event.
-#' @param N Maximum number of missed observations to be taken into account.
+#' @param N Maximum number of missed observations to be taken into account (default N=5).
 #' @param fun Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions
+#' @details
+#' The probability density function for observed intervals \link[droprate]{intervalpdf}
+#' is fit to \code{data} by maximization of the
+#' associated log-likelihood using \link[stats]{optim}.
 #' @export
 #' @return This function returns an object of class \code{droprate}
 #' @examples
 #' data(goosedrop)
-#' dr=droprate(goosedrop$interval)
+#' dr=estinterval(goosedrop$interval)
 #' plot(dr)
 #' summary(dr)
 #'
-#' # let's analyze dropping intervals by site
-#' dr1=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval)
-#' dr2=droprate(goosedrop[goosedrop$site=="terschelling",]$interval)
+#' # let's estimate mean and variance of dropping intervals by site
+#' dr1=estinterval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval)
+#' dr2=estinterval(goosedrop[goosedrop$site=="terschelling",]$interval)
 #'
-#' # The T test that accounts for missed observations shows the
+#' # The T test that accounts for missed observations shows that the
 #' # mean dropping interval is not significantly different at the two sites:
 #' ttest(dr1,dr2)
 #' # not accounting for missed observations leads to the false
 #' # conclusion that the mean intervals are significantly different:
 #' t.test(dr1$data,dr2$data)
 #'
-droprate=function(data,mu=mean(data),sigma=sd(data)/2,p=0.2,N=5,fun="normal"){
+estinterval=function(data,mu=mean(data),sigma=sd(data)/2,p=0.2,N=5,fun="normal"){
   call=match.call()
   if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
   if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
@@ -112,12 +203,12 @@ droprate=function(data,mu=mean(data),sigma=sd(data)/2,p=0.2,N=5,fun="normal"){
 
 #' summary method for class \code{droprate}
 #'
-#' @param x An object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}
+#' @param x An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @export
 #' @return The function \code{summary.droprate} computes and returns a list of summary statistics
 #' @examples
 #' data(goosedrop)
-#' dr=droprate(goosedrop$interval)
+#' dr=estinterval(goosedrop$interval)
 #' summary(dr)
 summary.droprate=function(x){
   stopifnot(inherits(x, "droprate"))
@@ -130,7 +221,7 @@ summary.droprate=function(x){
 
 #' print method for class \code{droprate}
 #'
-#' @param x An object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}
+#' @param x An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @keywords internal
 #' @export
 print.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
@@ -144,28 +235,30 @@ print.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
 
 #' print method for class \code{summary.droprate}
 #'
-#' @param x An object of class \code{symmary.droprate}, usually a result of a call to \link[droprate]{summary.droprate}
+#' @param x An object of class \code{symmary.droprate}, usually a result of a call to \link[summary]{summary.droprate}
 #' @keywords internal
 #' @export
 print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
   stopifnot(inherits(x, "summary.droprate"))
   cat("\nCall: ", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
-  cat("             distribution used: ",x$distribution,"\n")
+
+  cat("           mean event interval: ",format(signif(x$mean,digits)),"\n")
+  cat("            standard deviation: ",format(signif(x$stdev,digits)),"\n")
+  cat("      event observation chance: ",format(signif(1-x$fractionMissed))," (1-miss chance)\n\n")
+
+  cat("  fitted interval distribution: ",x$distribution,"\n")
   cat("           number of intervals: ",format(signif(length(x$data),digits)),"\n")
   cat("                Log-likelihood: ",format(signif(x$loglik[1],digits)),"\n")
   cat("             Residual deviance: ",format(signif(x$deviance[1]))," on ", x$df.residual[1], "degrees of freedom\n")
   cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[1],digits)), "(against null model without miss chance)\n")
   cat("             Residual deviance: ",format(signif(x$deviance[2]))," on ", x$df.residual[2], "degrees of freedom\n")
-  cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[2],digits)), "(against saturated null model)\n\n")
-  cat("               mean event rate: ",format(signif(x$mean,digits)),"\n")
-  cat("            standard deviation: ",format(signif(x$stdev,digits)),"\n")
-  cat("               fraction missed: ",format(signif(x$fractionMissed)),"\n")
+  cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[2],digits)), "(against saturated null model)\n")
 }
 
 #' Performs one and two sample t-tests on objects of class \code{droprate}
 #' @title Student's t-test for objects of class \code{droprate}
-#' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}
-#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}
+#' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.
 #' @param mu a number indicating the true value of the mean (or difference in means if you are performing a two sample test).
 #' @param var.equal a logical variable indicating whether to treat the two variances as being equal. If TRUE then the pooled variance is used to estimate the variance otherwise the Welch (or Satterthwaite) approximation to the degrees of freedom is used.
@@ -176,14 +269,14 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
 #' @return A list with class "\code{htest}" containing the same components as in \link[stats]{t.test}
 #' @examples
 #' data(goosedrop)
-#' dr=droprate(goosedrop$interval)
+#' dr=estinterval(goosedrop$interval)
 #' # perform a one-sample t-test
 #' ttest(dr)
 #' # two sample t-test
 #' data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
 #' data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
-#' dr.beforeMay=droprate(data.beforeMay$interval)
-#' dr.afterMay=droprate(data.afterMay$interval)
+#' dr.beforeMay=estinterval(data.beforeMay$interval)
+#' dr.afterMay=estinterval(data.afterMay$interval)
 #' ttest(dr.beforeMay,dr.afterMay)
 #'
 ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
@@ -291,8 +384,8 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
 
 #' Performs an F test to compare the variances of objects of class \code{droprate}
 #' @title F Test to compare two variances of objects of class \code{droprate}
-#' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}
-#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}
+#' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.
 #' @param ratio the hypothesized ratio of the population variances of \code{x} and \code{y}.
 #' @param conf.level confidence level for the returned confidence interval
@@ -302,12 +395,12 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
 #' @return A list with class "\code{htest}" containing the same components as in \link[stats]{var.test}
 #' @examples
 #' data(goosedrop)
-#' dr=droprate(goosedrop$interval)
+#' dr=estinterval(goosedrop$interval)
 #' # split the interval data into two periods
 #' data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
 #' data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
-#' dr.beforeMay=droprate(data.beforeMay$interval)
-#' dr.afterMay=droprate(data.afterMay$interval)
+#' dr.beforeMay=estinterval(data.beforeMay$interval)
+#' dr.afterMay=estinterval(data.afterMay$interval)
 #' # perform an F test
 #' vartest(dr.beforeMay,dr.afterMay)
 #'

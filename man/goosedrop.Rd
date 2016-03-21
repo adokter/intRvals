@@ -3,19 +3,18 @@
 \docType{data}
 \name{goosedrop}
 \alias{goosedrop}
-\title{This is data to be included in my package}
+\title{Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)}
 \format{An object of class \code{data.frame} with 705 rows and 3 columns.}
 \usage{
 goosedrop
 }
 \description{
-This is data to be included in my package
+The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
+Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
+The time in seconds between wo subsequent dropping events of a single individuals refers to one dropping interval.
 }
 \author{
 Adriaan Dokter \email{a.m.dokter@uva.nl}
-}
-\references{
-\url{data_blah.com}
 }
 \keyword{datasets}
 

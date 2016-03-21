@@ -8,9 +8,9 @@ vartest(x, y, ratio = 1, alternative = c("two.sided", "less", "greater"),
   conf.level = 0.95)
 }
 \arguments{
-\item{x}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}}
+\item{x}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
-\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{droprate}}
+\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
 \item{ratio}{the hypothesized ratio of the population variances of \code{x} and \code{y}.}
 
@@ -30,12 +30,12 @@ data to which the models \code{x} and \code{y} were fitted, is equal to ratio.
 }
 \examples{
 data(goosedrop)
-dr=droprate(goosedrop$interval)
+dr=estinterval(goosedrop$interval)
 # split the interval data into two periods
 data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
 data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]
-dr.beforeMay=droprate(data.beforeMay$interval)
-dr.afterMay=droprate(data.afterMay$interval)
+dr.beforeMay=estinterval(data.beforeMay$interval)
+dr.afterMay=estinterval(data.afterMay$interval)
 # perform an F test
 vartest(dr.beforeMay,dr.afterMay)
 
