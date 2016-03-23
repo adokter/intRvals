@@ -2,7 +2,7 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{intervalpdf}
 \alias{intervalpdf}
-\title{Probability density function (PDF) of an observed interval distribution}
+\title{Probability density function of an observed interval distribution}
 \usage{
 intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3, N = 5,
   fun = "normal")
@@ -14,9 +14,9 @@ intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3, N = 5,
 
 \item{sigma}{The standard deviation of the true interval distribution}
 
-\item{p}{The chance that the event that defines the start or end of an interval is not observed}
+\item{p}{The chance that an arrival that marks the start or end of an interval is not observed}
 
-\item{N}{The maximum number of consecutive missed events to take into consideration}
+\item{N}{The maximum number of consecutive missed arrivals to take into consideration}
 
 \item{fun}{assumed distribution family of the true interval distribution, one of
  "\code{normal}" or "\code{gamma}", corresponding
@@ -27,27 +27,42 @@ This function returns a list with data, corresponding to the model fit
 }
 \description{
 Observed intervals are assumed to be sampled through observation of continuous
-distinct events in time. Two subsequently observed events mark the start and end
-of an interval. The chance that an event is not observed can be nonzero, leading to
+distinct arrivals in time. Two subsequently observed arrivals mark the start and end
+of an interval. The chance that an arrival is not observed can be nonzero, leading to
 observed intervals at integer multiples of the true interval.
 }
 \details{
-By default intervals x are assumed to follow a normal distribution \eqn{N(\mu,\sigma^2)}{N(\mu,\sigma^2)},
-with a probability density function \eqn{\phi(x)}:
-\deqn{\phi(x|\mu,\sigma^2)~N(\mu,\sigma^2)}{\phi(x|\mu,\sigma^2)~N(\mu,\sigma^2)}
-with \eqn{\mu} the average event interval and \eqn{\sigma} its associated standard deviation.
-The probability density function \eqn{\phi}obs of observed event intervals
-in a scenario where the chance to not observe an event is nonzero,
-will be a superposition of several normal distributions, at multiples of the fundamental mean
-event interval. Normal distribution \eqn{i} will correspond to those intervals where \eqn{i} events have been
-missed consecutively. If \eqn{p} equals this chance of not observing a dropping, then the
-probability \eqn{P(i)} to miss \eqn{i} consecutive droppings equals
+\subsection{General}{
+intervals x are assumed to follow a standard distribution (either a normal
+or gamma distribution) with probability density function \eqn{\phi(x|\mu,\sigma)}
+with \eqn{\mu} the mean arrival interval and \eqn{\sigma} its associated standard deviation.
+The probability density function \eqn{\phi_{obs}} of observed arrival intervals
+in a scenario where the chance to not observe an arrival is nonzero,
+will be a superposition of several standard distributions, at multiples of the fundamental mean
+arrival interval. Standard distribution \eqn{i} will correspond to those intervals where \eqn{i} arrivals have been
+missed consecutively. If \eqn{p} equals this chance of not observing an arrival, then the
+probability \eqn{P(i)} to miss \eqn{i} consecutive arrivals equals
 \deqn{P(i)=p^i-p^{i+1}}{P(i)=p^i-p^{i+1}}
-The width of normal distribution i will be broadened relative to the fundamental, according to
-standard uncertainty propagation in the case of addition, such that we may write for the observed PDF, \eqn{\phi{obs}}:
-\deqn{\phi_{obs}(x | \mu, \sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}{\phi{obs}(x | \mu,\sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}
+The width of standard distribution i will be broadened relative to the fundamental, according to
+standard uncertainty propagation in the case of addition. Both in the case
+of normal and gamma-distributed intervals (see next subsections) we may write for the observed
+probability density function, \eqn{\phi_{obs}}:
+\deqn{\phi_{obs}(x | \mu, \sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}{\phi_{obs}(x | \mu,\sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma)}
 In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 Be default the sum is ran up to N=5.
+}
+\subsection{Normal-distributed intervals}{
+By default intervals x are assumed to follow a \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
+with a probability density function \eqn{\phi(x)}:
+\deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
+}
+which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+\subsection{Gamma-distributed intervals}{
+intervals x may also be assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
+with a probability density function \eqn{\phi(x)}:
+\deqn{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}
+which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+}
 }
 \examples{
 # a low miss chance results in an observed PDF

@@ -2,7 +2,7 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{estinterval}
 \alias{estinterval}
-\title{Estimate interval mean and variance accounting for missed event observations}
+\title{Estimate interval mean and variance accounting for missed arrival observations}
 \usage{
 estinterval(data, mu = mean(data), sigma = sd(data)/2, p = 0.2, N = 5,
   fun = "normal")
@@ -14,7 +14,7 @@ estinterval(data, mu = mean(data), sigma = sd(data)/2, p = 0.2, N = 5,
 
 \item{sigma}{Start value for the numeric optimization for the standard deviation of the interval rate.}
 
-\item{p}{Start value for the numeric optimization for the chance to miss an observation of an event.}
+\item{p}{Start value for the numeric optimization for the chance to miss an observation of an arrival.}
 
 \item{N}{Maximum number of missed observations to be taken into account (default N=5).}
 
@@ -25,7 +25,7 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 This function returns an object of class \code{droprate}
 }
 \description{
-Estimate interval mean and variance accounting for missed event observations
+Estimate interval mean and variance accounting for missed arrival observations
 }
 \details{
 The probability density function for observed intervals \link[droprate]{intervalpdf}

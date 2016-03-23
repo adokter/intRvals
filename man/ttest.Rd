@@ -2,7 +2,7 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{ttest}
 \alias{ttest}
-\title{Student's t-test for objects of class \code{droprate}}
+\title{Student's t-test to compare two means of objects of class \code{droprate}}
 \usage{
 ttest(x, y = NULL, alternative = c("two.sided", "less", "greater"),
   mu = 0, var.equal = FALSE, conf.level = 0.95)

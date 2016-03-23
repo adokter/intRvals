@@ -4,23 +4,23 @@
 \name{droprate-package}
 \alias{droprate}
 \alias{droprate-package}
-\title{Analyse interval data with missed event observations}
+\title{Analyse interval data with missed arrival observations}
 \description{
-Droprate allows you to calculate mean event intervals
+Droprate allows you to calculate mean arrival intervals
 and compare means and variances of groups of interval data,
-while taking into account missed event observations
+while taking into account missed arrival observations
 }
 \details{
 The central function of package \pkg{droprate} is
 \code{\link{estinterval}}, which can be used to estimate the
-mean event interval (and its standard deviation) from interval
-data with missed events. This is
+mean arrival interval (and its standard deviation) from interval
+data with missed arrivals. This is
 achieved by fitting the theoretical probability density
 \code{\link{intervalpdf}} to the interval data
 
 This package was designed initially for
 analysing dropping intervals of grazing geese, but can be used to analyse any
-kind of interval data derived from distinct event observations.
+kind of interval data derived from distinct arrival observations.
 One interval is defined as the time between observing a dropping be excreted, until the time the
 next dropping is excreted. The package provides a way of taking into account missed observations
 (excreted droppings), which leads to occasional observed intervals at integer multiples of the

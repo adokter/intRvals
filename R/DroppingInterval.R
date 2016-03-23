@@ -1,20 +1,20 @@
-#' Analyse interval data with missed event observations
+#' Analyse interval data with missed arrival observations
 #'
-#' Droprate allows you to calculate mean event intervals
+#' Droprate allows you to calculate mean arrival intervals
 #' and compare means and variances of groups of interval data,
-#' while taking into account missed event observations
+#' while taking into account missed arrival observations
 #'
 #' The central function of package \pkg{droprate} is
 #' \code{\link{estinterval}}, which can be used to estimate the
-#' mean event interval (and its standard deviation) from interval
-#' data with missed events. This is
+#' mean arrival interval (and its standard deviation) from interval
+#' data with missed arrivals. This is
 #' achieved by fitting the theoretical probability density
 #' \code{\link{intervalpdf}} to the interval data
 #'
 #'
 #' This package was designed initially for
 #' analysing dropping intervals of grazing geese, but can be used to analyse any
-#' kind of interval data derived from distinct event observations.
+#' kind of interval data derived from distinct arrival observations.
 #' One interval is defined as the time between observing a dropping be excreted, until the time the
 #' next dropping is excreted. The package provides a way of taking into account missed observations
 #' (excreted droppings), which leads to occasional observed intervals at integer multiples of the
@@ -50,16 +50,16 @@ load("~/git/R/droprate/data/goosedrop.RData")
 #'
 #' The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
 #' Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
-#' The time in seconds between wo subsequent dropping events of a single individuals refers to one dropping interval.
+#' The time in seconds between wo subsequent dropping arrivals of a single individuals refers to one dropping interval.
 
 #'
 #' @author Adriaan Dokter \email{a.m.dokter@uva.nl}
 "goosedrop"
 
-# normal distribution for (i-1) missed events component of the
+# normal distribution for (i-1) missed arrivals component of the
 # probability density function (PDF)
 normi=  function(x,mu,sigma,p,i) (p^(i-1)-p^i)*dnorm(x,i*mu,sqrt(i)*sigma)
-# gamma distribution for (i-1) missed events component of the PDF
+# gamma distribution for (i-1) missed arrivals component of the PDF
 gammai=  function(x,mu,sigma,p,i) (p^(i-1)-p^i)*dgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/mu)
 
 # normalized sum of all components of the PDF
@@ -70,40 +70,55 @@ probdens=function(x,mu,sigma,p,N,fun=normi) {
   else return(sum(normsum(x,mu,sigma,p,N,fun=fun)))
 }
 
-#' Probability density function (PDF) of an observed interval distribution
+#' Probability density function of an observed interval distribution
 #'
 #' Observed intervals are assumed to be sampled through observation of continuous
-#' distinct events in time. Two subsequently observed events mark the start and end
-#' of an interval. The chance that an event is not observed can be nonzero, leading to
+#' distinct arrivals in time. Two subsequently observed arrivals mark the start and end
+#' of an interval. The chance that an arrival is not observed can be nonzero, leading to
 #' observed intervals at integer multiples of the true interval.
 #'
 #' @param data A list of intervals for which to calculate the probability density
 #' @param mu The mean of the true interval distribution
 #' @param sigma The standard deviation of the true interval distribution
-#' @param p The chance that the event that defines the start or end of an interval is not observed
-#' @param N The maximum number of consecutive missed events to take into consideration
+#' @param p The chance that an arrival that marks the start or end of an interval is not observed
+#' @param N The maximum number of consecutive missed arrivals to take into consideration
 #' @param fun assumed distribution family of the true interval distribution, one of
 #'  "\code{normal}" or "\code{gamma}", corresponding
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.
 #' @export
 #' @return This function returns a list with data, corresponding to the model fit
 #' @details
-#' By default intervals x are assumed to follow a normal distribution \eqn{N(\mu,\sigma^2)}{N(\mu,\sigma^2)},
-#' with a probability density function \eqn{\phi(x)}:
-#' \deqn{\phi(x|\mu,\sigma^2)~N(\mu,\sigma^2)}{\phi(x|\mu,\sigma^2)~N(\mu,\sigma^2)}
-#' with \eqn{\mu} the average event interval and \eqn{\sigma} its associated standard deviation.
-#' The probability density function \eqn{\phi}obs of observed event intervals
-#' in a scenario where the chance to not observe an event is nonzero,
-#' will be a superposition of several normal distributions, at multiples of the fundamental mean
-#' event interval. Normal distribution \eqn{i} will correspond to those intervals where \eqn{i} events have been
-#' missed consecutively. If \eqn{p} equals this chance of not observing a dropping, then the
-#' probability \eqn{P(i)} to miss \eqn{i} consecutive droppings equals
+#' \subsection{General}{
+#' intervals x are assumed to follow a standard distribution (either a normal
+#' or gamma distribution) with probability density function \eqn{\phi(x|\mu,\sigma)}
+#' with \eqn{\mu} the mean arrival interval and \eqn{\sigma} its associated standard deviation.
+#' The probability density function \eqn{\phi_{obs}} of observed arrival intervals
+#' in a scenario where the chance to not observe an arrival is nonzero,
+#' will be a superposition of several standard distributions, at multiples of the fundamental mean
+#' arrival interval. Standard distribution \eqn{i} will correspond to those intervals where \eqn{i} arrivals have been
+#' missed consecutively. If \eqn{p} equals this chance of not observing an arrival, then the
+#' probability \eqn{P(i)} to miss \eqn{i} consecutive arrivals equals
 #' \deqn{P(i)=p^i-p^{i+1}}{P(i)=p^i-p^{i+1}}
-#' The width of normal distribution i will be broadened relative to the fundamental, according to
-#' standard uncertainty propagation in the case of addition, such that we may write for the observed PDF, \eqn{\phi{obs}}:
-#' \deqn{\phi_{obs}(x | \mu, \sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}{\phi{obs}(x | \mu,\sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}
+#' The width of standard distribution i will be broadened relative to the fundamental, according to
+#' standard uncertainty propagation in the case of addition. Both in the case
+#' of normal and gamma-distributed intervals (see next subsections) we may write for the observed
+#' probability density function, \eqn{\phi_{obs}}:
+#' \deqn{\phi_{obs}(x | \mu, \sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}{\phi_{obs}(x | \mu,\sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma)}
 #' In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 #' Be default the sum is ran up to N=5.
+#' }
+#' \subsection{Normal-distributed intervals}{
+#' By default intervals x are assumed to follow a \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
+#' with a probability density function \eqn{\phi(x)}:
+#' \deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
+#' }
+#' which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+#' \subsection{Gamma-distributed intervals}{
+#' intervals x may also be assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
+#' with a probability density function \eqn{\phi(x)}:
+#' \deqn{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}
+#' which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+#' }
 #' @examples
 #' # a low miss chance results in an observed PDF
 #' # with primarily a single peak, with a mean and standard
@@ -115,7 +130,6 @@ probdens=function(x,mu,sigma,p,N,fun=normi) {
 #' #  peaks at integer multiples of the mean of the true
 #' # interval distribution
 #' plot(intervalpdf(mu=200,sigma=40,p=0.4),type='l',col='red')
-
 intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5,fun="normal"){
   if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
   if(fun=="normal") fun2use=normi
@@ -156,12 +170,12 @@ plot.droprate=function(object,binsize=20,xlab="Interval",ylab="Density",main="In
   curve(probdens(x,object$mean,object$stdev,object$fractionMissed,object$N,fun=fun2use),0,1500,col=line.col,add=T)
 }
 
-#' Estimate interval mean and variance accounting for missed event observations
+#' Estimate interval mean and variance accounting for missed arrival observations
 #'
 #' @param data A numeric list of intervals.
 #' @param mu Start value for the numeric optimization for the mean interval rate.
 #' @param sigma Start value for the numeric optimization for the standard deviation of the interval rate.
-#' @param p Start value for the numeric optimization for the chance to miss an observation of an event.
+#' @param p Start value for the numeric optimization for the chance to miss an observation of an arrival.
 #' @param N Maximum number of missed observations to be taken into account (default N=5).
 #' @param fun Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions
@@ -206,6 +220,90 @@ estinterval=function(data,mu=mean(data),sigma=sd(data)/2,p=0.2,N=5,fun="normal")
   out
 }
 
+#' Conversion of interval estimates to rates
+#'
+#' @param data An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @param minint the minimum interval value from which numerical integrations converting to rates are started
+#' @param maxint the maximum interval value up to which numerical integrations converting to rates are continued
+#' @param digits the number of digits for printing to screen
+#' @details
+#' \subsection{Normal-distributed intervals}{
+#' When inter-arrival times (intervals) \eqn{x} follow a normal distribution with mean \eqn{\mu} and
+#' standard deviation \eqn{\sigma}, i.e. follow the probability density function
+#' \code{\link[stats]{Normal}(mean=}\eqn{\mu}\code{, sd=}\eqn{\sigma)},
+#'  then the mean rate (\eqn{\mu_{rate}}) can be calculated numerically by:
+#'  \deqn{\mu_{rate}=\int_0^\infty (1/x) * \phi(x | \mu,\sigma)}
+#'  and the variance of the rate (\eqn{\sigma^2_{rate}}) by:
+#'  \deqn{\sigma^2_{rate}=\int_0^\infty (1/x^2) * \phi(x | \mu,\sigma) -\mu_{rate}^2}
+#' }
+#' This approximation is only valid for distributions that have a negligable
+#' density near \eqn{x=0}, so that the distribution can be effectively
+#'  truncated before \eqn{x} approaches zero, where the integral is not defined.
+#' For interval data with many intervals \eqn{x}
+#' near zero, use of a gamma distribution is recommended instead.
+#' \subsection{Gamma-distributed intervals}{
+#' When inter-arrival times (intervals) follow a gamma distribution with mean \eqn{\mu} and
+#' standard deviation \eqn{\sigma}, i.e. follow the probability density function
+#' \code{\link[stats]{GammaDist}(shape=}\eqn{\alpha=\mu^2/\sigma^2}\code{, scale=}\eqn{\beta=\sigma^2/\mu)},
+#'  then the associated distribution of rates is given by an inverse gamma distribution
+#'  with shape parameter \eqn{\alpha} and scale parameter \eqn{1/\beta}.
+#'
+#' The mean of this inverse gamma distribution is given by the formula
+#' \deqn{\mu_{rate}=\mu/(\mu^2 - \sigma^2)}
+#' provided that \eqn{\alpha > 1}, i.e. \eqn{\mu > \sigma}.
+#'
+#' The variance of this inverse gamma distribution is given by the formula
+#' \deqn{\sigma^2_{rate}=\mu^2\sigma^2/((\mu^2 - \sigma^2)(\mu^2 - 2\sigma^2)^2}
+#' provided that \eqn{\alpha > 2}, i.e. \eqn{\mu > sqrt(2) * \sigma}.
+#'
+#' Values \eqn{\mu} and \eqn{\sigma} are estimated on the interval data, and
+#' above formula are used to calculate the estimated mean and variance of the arrival rate.
+#'
+#' If these formula cannot be used (because the provisions on the value
+#' of \eqn{\alpha} are not met), numerical integration is used instead,
+#' analagous to the procedure for normal-distributed intervals.
+#' }
+#' @export
+#' @return The function \code{interval2rate} computes and returns a named vector with the rate mean and standard deviation
+#' @examples
+#' data(goosedrop)
+#' dr=estinterval(goosedrop$interval)
+#' interval2rate(dr)
+interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,digits = max(3L, getOption("digits") - 3L)){
+  stopifnot(inherits(data, "droprate"))
+  if(data$distribution=="normal"){
+    cat(paste("Numerically calculating rate mean and standard deviation\n  truncating normal distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
+    intinv=integrate(function(y) (1/y)*dnorm(y,mean=data$mean,sd=data$stdev),minint,maxint)
+    intinvcubed=integrate(function(y) (1/y^2)*dnorm(y,mean=data$mean,sd=data$stdev),minint,maxint)
+    rate.mean=intinv$value
+    rate.stdev=sqrt(intinvcubed$value-intinv$value^2)
+
+  }
+  if(data$distribution=="gamma"){
+    if(data$mean>sqrt(2)*data$stdev){
+      rate.mean=data$mean/(data$mean^2-data$stdev^2)
+      rate.stdev=sqrt(data$mean^2*data$stdev^2/((data$mean^2-2*data$stdev^2)*(data$mean^2-data$stdev^2)^2))
+    }
+    else if(data$mean>data$stdev){
+      rate.mean=data$mean/(data$mean^2-data$stdev^2)
+      cat(paste("Numerically calculating rate standard deviation\n  truncating gamma distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
+      intinvcubed=integrate(function(y) (1/y^2)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+      rate.stdev=sqrt(intinvcubed$value-rate.mean^2)
+    }
+    else{
+      cat(paste("Numerically calculating rate mean and standard deviation\n  truncating gamma distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
+      intinv=integrate(function(y) (1/y)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+      intinvcubed=integrate(function(y) (1/y^2)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+      rate.mean=intinv$value
+      rate.stdev=sqrt(intinvcubed$value-intinv$value^2)
+    }
+  }
+  output=c(mean=rate.mean,stdev=rate.stdev)
+  output
+}
+
+
+
 #' summary method for class \code{droprate}
 #'
 #' @param x An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
@@ -231,9 +329,9 @@ summary.droprate=function(x){
 #' @export
 print.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
   stopifnot(inherits(x, "droprate"))
-  cat("Analysis of event interval data with missed event observations\n\n")
+  cat("Analysis of arrival interval data with missed arrival observations\n\n")
   cat("  number of intervals: ",format(signif(length(x$data),digits)),"\n\n")
-  cat("      mean event rate: ",format(signif(x$mean,digits)),"\n")
+  cat("    mean arrival rate: ",format(signif(x$mean,digits)),"\n")
   cat("   standard deviation: ",format(signif(x$stdev,digits)),"\n")
   cat("      fraction missed: ",format(signif(x$fractionMissed)),"\n")
 }
@@ -247,9 +345,9 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
   stopifnot(inherits(x, "summary.droprate"))
   cat("\nCall: ", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
 
-  cat("           mean event interval: ",format(signif(x$mean,digits)),"\n")
+  cat("           mean arrival interval: ",format(signif(x$mean,digits)),"\n")
   cat("            standard deviation: ",format(signif(x$stdev,digits)),"\n")
-  cat("      event observation chance: ",format(signif(1-x$fractionMissed))," (1-miss chance)\n\n")
+  cat("      arrival observation chance: ",format(signif(1-x$fractionMissed))," (1-miss chance)\n\n")
 
   cat("  fitted interval distribution: ",x$distribution,"\n")
   cat("           number of intervals: ",format(signif(length(x$data),digits)),"\n")
@@ -261,7 +359,7 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L)){
 }
 
 #' Performs one and two sample t-tests on objects of class \code{droprate}
-#' @title Student's t-test for objects of class \code{droprate}
+#' @title Student's t-test to compare two means of objects of class \code{droprate}
 #' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.

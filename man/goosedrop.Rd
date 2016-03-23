@@ -11,7 +11,7 @@ goosedrop
 \description{
 The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
 Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
-The time in seconds between wo subsequent dropping events of a single individuals refers to one dropping interval.
+The time in seconds between wo subsequent dropping arrivals of a single individuals refers to one dropping interval.
 }
 \author{
 Adriaan Dokter \email{a.m.dokter@uva.nl}
