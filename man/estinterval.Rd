@@ -4,22 +4,28 @@
 \alias{estinterval}
 \title{Estimate interval mean and variance accounting for missed arrival observations}
 \usage{
-estinterval(data, mu = mean(data), sigma = sd(data)/2, p = 0.2, N = 5,
-  fun = "normal")
+estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
+  N = 5L, fun = "normal", fpp = (if (fpp.method == "fixed") 0 else 0.1),
+  fpp.method = "fixed")
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
 
-\item{mu}{Start value for the numeric optimization for the mean interval rate.}
+\item{mu}{Start value for the numeric optimization for the mean arrival rate.}
 
-\item{sigma}{Start value for the numeric optimization for the standard deviation of the interval rate.}
+\item{sigma}{Start value for the numeric optimization for the standard deviation of the arrival rate.}
 
-\item{p}{Start value for the numeric optimization for the chance to miss an observation of an arrival.}
+\item{p}{Start value for the numeric optimization for the probability to miss an observation of an arrival.}
 
 \item{N}{Maximum number of missed observations to be taken into account (default N=5).}
 
 \item{fun}{Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
+
+\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
+
+\item{fpp.method}{A string equal to 'fixed' or 'auto'. When 'auto' fpp is optimized as a free model parameter,
+in which case \code{fpp} is taken as start value in the optimisation.}
 }
 \value{
 This function returns an object of class \code{droprate}
@@ -41,13 +47,23 @@ summary(dr)
 # let's estimate mean and variance of dropping intervals by site
 dr1=estinterval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval)
 dr2=estinterval(goosedrop[goosedrop$site=="terschelling",]$interval)
-
 # The T test that accounts for missed observations shows that the
-# mean dropping interval is not significantly different at the two sites:
+# mean dropping interval are significantly different at the two sites:
 ttest(dr1,dr2)
-# not accounting for missed observations leads to the false
-# conclusion that the mean intervals are significantly different:
-t.test(dr1$data,dr2$data)
+# assuming gamma-distributed intervals, analysing period 5 only
+# assuming a fraction of intervals to be distributed randomly (fpp='auto'),
+dr3=estinterval(goosedrop[goosedrop$site=="schiermonnikoog" & goosedrop$period==5,]$interval,
+fpp.method="auto",fun="gamma")
+dr4=estinterval(goosedrop[goosedrop$site=="terschelling" & goosedrop$period==5,]$interval,
+fpp.method="auto",fun="gamma")
+# plot the fits:
+plot(dr3,xlim=c(0,1000))
+plot(dr4,xlim=c(0,1000))
+# mean dropping interval are not significantly different at the two sites:
+ttest(dr3,dr4)
+# not accounting for missed observations leads to a (spurious)
+# highly significant difference between sites
+t.test(dr3$data,dr4$data)
 
 }
 

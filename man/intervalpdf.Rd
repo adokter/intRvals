@@ -4,8 +4,8 @@
 \alias{intervalpdf}
 \title{Probability density function of an observed interval distribution}
 \usage{
-intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3, N = 5,
-  fun = "normal")
+intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
+  N = 5L, fun = "normal", fpp = 0)
 }
 \arguments{
 \item{data}{A list of intervals for which to calculate the probability density}
@@ -14,11 +14,13 @@ intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3, N = 5,
 
 \item{sigma}{The standard deviation of the true interval distribution}
 
-\item{p}{The chance that an arrival that marks the start or end of an interval is not observed}
+\item{p}{The probability that an arrival that marks the start or end of an interval is not observed}
 
 \item{N}{The maximum number of consecutive missed arrivals to take into consideration}
 
-\item{fun}{assumed distribution family of the true interval distribution, one of
+\item{fun}{assumed distribution family of the true interval distribution, one of}
+
+\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
  "\code{normal}" or "\code{gamma}", corresponding
 to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.}
 }
@@ -28,7 +30,7 @@ This function returns a list with data, corresponding to the model fit
 \description{
 Observed intervals are assumed to be sampled through observation of continuous
 distinct arrivals in time. Two subsequently observed arrivals mark the start and end
-of an interval. The chance that an arrival is not observed can be nonzero, leading to
+of an interval. The probability that an arrival is not observed can be nonzero, leading to
 observed intervals at integer multiples of the true interval.
 }
 \details{
@@ -37,10 +39,10 @@ intervals x are assumed to follow a standard distribution (either a normal
 or gamma distribution) with probability density function \eqn{\phi(x|\mu,\sigma)}
 with \eqn{\mu} the mean arrival interval and \eqn{\sigma} its associated standard deviation.
 The probability density function \eqn{\phi_{obs}} of observed arrival intervals
-in a scenario where the chance to not observe an arrival is nonzero,
+in a scenario where the probability to not observe an arrival is nonzero,
 will be a superposition of several standard distributions, at multiples of the fundamental mean
 arrival interval. Standard distribution \eqn{i} will correspond to those intervals where \eqn{i} arrivals have been
-missed consecutively. If \eqn{p} equals this chance of not observing an arrival, then the
+missed consecutively. If \eqn{p} equals this probability of not observing an arrival, then the
 probability \eqn{P(i)} to miss \eqn{i} consecutive arrivals equals
 \deqn{P(i)=p^i-p^{i+1}}{P(i)=p^i-p^{i+1}}
 The width of standard distribution i will be broadened relative to the fundamental, according to
@@ -65,14 +67,16 @@ which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
 }
 }
 \examples{
-# a low miss chance results in an observed PDF
-# with primarily a single peak, with a mean and standard
+# a low probability of not observing an arrival
+# results in an observed PDF with primarily
+# a single peak, with a mean and standard
 # deviation almost identical to the true interval
 # distribution:
 plot(intervalpdf(mu=200,sigma=40,p=0.01),type='l',col='red')
 
-# a higher miss chance results in an observed PDF with multiple
-#  peaks at integer multiples of the mean of the true
+# a higher probability to miss an arrival
+# results in an observed PDF with multiple
+# peaks at integer multiples of the mean of the true
 # interval distribution
 plot(intervalpdf(mu=200,sigma=40,p=0.4),type='l',col='red')
 }

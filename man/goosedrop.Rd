@@ -4,14 +4,21 @@
 \name{goosedrop}
 \alias{goosedrop}
 \title{Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)}
-\format{An object of class \code{data.frame} with 705 rows and 3 columns.}
+\format{An object of class \code{data.frame} with 705 rows and 4 columns.}
 \usage{
 goosedrop
 }
 \description{
 The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
 Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
-The time in seconds between wo subsequent dropping arrivals of a single individuals refers to one dropping interval.
+The time in seconds between wo subsequently observed dropping arrivals of a single individual refers to one dropping interval.
+The variables are as follows:
+\itemize{
+  \item \code{date}: observation start time of the interval
+  \item \code{interval}: length of the interval in seconds
+  \item \code{site}: observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)
+  \item \code{period}: observation period
+}
 }
 \author{
 Adriaan Dokter \email{a.m.dokter@uva.nl}

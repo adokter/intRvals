@@ -31,7 +31,7 @@ Sets of interval data can be compared using \code{\link{ttest}} and \code{\link{
 The package comes with a test dataset \code{\link{goosedrop}}
 }
 \references{
-Bédard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77–90.
+B\'{e}dard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
 
 Dokter et al. 2016 ???
 }
