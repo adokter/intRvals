@@ -5,8 +5,8 @@
 \title{Estimate interval mean and variance accounting for missed arrival observations}
 \usage{
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
-  N = 5L, fun = "normal", fpp = (if (fpp.method == "fixed") 0 else 0.1),
-  fpp.method = "fixed")
+  N = 5L, fun = "normal", trunc = c(0, Inf), fpp = (if (fpp.method ==
+  "fixed") 0 else 0.1), fpp.method = "fixed", conf.level = 0.95, ...)
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
@@ -22,10 +22,17 @@ estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
 \item{fun}{Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 
+\item{trunc}{Use a truncated probability density function with range \code{trunc}}
+
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
 
 \item{fpp.method}{A string equal to 'fixed' or 'auto'. When 'auto' fpp is optimized as a free model parameter,
-in which case \code{fpp} is taken as start value in the optimisation.}
+in which case \code{fpp} is taken as start value in the optimisation}
+
+\item{conf.level}{Confidence level for deviance test that checks whether model with nonzero miss chance
+\code{p} significantly outperforms a model without a miss chance (\code{p=0}).}
+
+\item{...}{Additional arguments to be passed to \link[stats]{optim}}
 }
 \value{
 This function returns an object of class \code{droprate}
@@ -59,10 +66,12 @@ fpp.method="auto",fun="gamma")
 # plot the fits:
 plot(dr3,xlim=c(0,1000))
 plot(dr4,xlim=c(0,1000))
-# mean dropping interval are not significantly different at the two sites:
+# mean dropping interval are not significantly different
+# at the two sites (on a 0.95 confidence level):
 ttest(dr3,dr4)
 # not accounting for missed observations leads to a (spurious)
-# highly significant difference between sites
+# larger difference in means, which also increases
+# the apparent statistical significance of the difference of means
 t.test(dr3$data,dr4$data)
 
 }

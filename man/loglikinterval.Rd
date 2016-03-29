@@ -4,7 +4,8 @@
 \alias{loglikinterval}
 \title{log-likelihood of an observed interval distribution}
 \usage{
-loglikinterval(data, mu, sigma, p, N = 5L, fun = "normal", fpp = 0)
+loglikinterval(data, mu, sigma, p, N = 5L, fun = "normal", trunc = c(0,
+  Inf), fpp = 0)
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
@@ -19,6 +20,8 @@ loglikinterval(data, mu, sigma, p, N = 5L, fun = "normal", fpp = 0)
 
 \item{fun}{Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
+
+\item{trunc}{Use a truncated probability density function with range \code{trunc}}
 
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
 }

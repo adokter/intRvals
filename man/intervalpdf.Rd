@@ -5,7 +5,7 @@
 \title{Probability density function of an observed interval distribution}
 \usage{
 intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
-  N = 5L, fun = "normal", fpp = 0)
+  N = 5L, fun = "normal", trunc = c(0, Inf), fpp = 0)
 }
 \arguments{
 \item{data}{A list of intervals for which to calculate the probability density}
@@ -19,6 +19,8 @@ intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
 \item{N}{The maximum number of consecutive missed arrivals to take into consideration}
 
 \item{fun}{assumed distribution family of the true interval distribution, one of}
+
+\item{trunc}{Use a truncated probability density function with range \code{trunc}}
 
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
  "\code{normal}" or "\code{gamma}", corresponding
