@@ -4,10 +4,12 @@
 \alias{summary.droprate}
 \title{summary method for class \code{droprate}}
 \usage{
-\method{summary}{droprate}(x)
+\method{summary}{droprate}(object, ...)
 }
 \arguments{
-\item{x}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{object}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+
+\item{...}{further arguments passed to or from other methods.}
 }
 \value{
 The function \code{summary.droprate} computes and returns a list of summary statistics

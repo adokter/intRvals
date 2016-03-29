@@ -4,12 +4,12 @@
 \alias{plot.droprate}
 \title{Plot an interval histogram and fit of droprate object}
 \usage{
-\method{plot}{droprate}(object, binsize = 20, xlab = "Interval",
+\method{plot}{droprate}(x, binsize = 20, xlab = "Interval",
   ylab = "Density", main = "Interval histogram and fit", line.col = "red",
   ...)
 }
 \arguments{
-\item{object}{An droprate class object}
+\item{x}{An droprate class object}
 
 \item{binsize}{Width of the histogram bins}
 

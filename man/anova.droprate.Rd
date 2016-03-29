@@ -4,17 +4,19 @@
 \alias{anova.droprate}
 \title{Compares model fits of two \code{droprate} objects}
 \usage{
-\method{anova}{droprate}(x, y, conf.level = 0.95, digits = max(3L,
-  getOption("digits") - 3L))
+\method{anova}{droprate}(object, y, conf.level = 0.95, digits = max(3L,
+  getOption("digits") - 3L), ...)
 }
 \arguments{
-\item{x}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{object}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
-\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{y}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
 \item{conf.level}{confidence level for the deviance test}
 
 \item{digits}{the number of digits for printing to screen}
+
+\item{...}{other arguments to be passed to low level functions}
 }
 \value{
 A list of class "\code{anova.droprate}" with the best model (1 or 2), deviance statistic and test results

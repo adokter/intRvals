@@ -5,7 +5,7 @@
 \title{print method for class \code{summary.droprate}}
 \usage{
 \method{print}{summary.droprate}(x, digits = max(3L, getOption("digits") -
-  3L))
+  3L), ...)
 }
 \arguments{
 \item{x}{An object of class \code{symmary.droprate}, usually a result of a call to \link[droprate]{summary.droprate}}

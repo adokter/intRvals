@@ -4,7 +4,8 @@
 \alias{print.anova.droprate}
 \title{print method for class \code{anova.droprate}}
 \usage{
-\method{print}{anova.droprate}(x, digits = max(3L, getOption("digits") - 3L))
+\method{print}{anova.droprate}(x, digits = max(3L, getOption("digits") - 3L),
+  ...)
 }
 \arguments{
 \item{x}{An object of class \code{anova.droprate}, usually a result of a call to \link[droprate]{anova.droprate}}
