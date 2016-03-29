@@ -2,15 +2,15 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{anova.droprate}
 \alias{anova.droprate}
-\title{Compares model fits of two \code{droprate} objects}
+\title{Compares model fits of \code{droprate} objects}
 \usage{
-\method{anova}{droprate}(object, y, conf.level = 0.95, digits = max(3L,
-  getOption("digits") - 3L), ...)
+\method{anova}{droprate}(object, y = NULL, conf.level = 0.95,
+  digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{object}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
-\item{y}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
 
 \item{conf.level}{confidence level for the deviance test}
 
@@ -20,9 +20,21 @@
 }
 \value{
 A list of class "\code{anova.droprate}" with the best model (1 or 2), deviance statistic and test results
+\describe{
+  \item{\code{best.model}}{the index of the best model (1 is first argument, 2 is second)}
+  \item{\code{deviance}}{the deviance between the two tested models}
+  \item{\code{p.value}}{p-value for the deviance (likelihood-ratio) test}
+  \item{\code{conf.level}}{assumed confidence level for the test}
+  \item{\code{model1.call}}{call that generated model 1}
+  \item{\code{model2.call}}{call that generated model 2}
+  \item{\code{AIC}}{numeric 2-vector containg the AIC value for model 1 (first element) and model 2 (second element)}
+  \item{\code{loglik}}{numeric 2-vector containg the log-likelihood value for model 1 (first element) and model 2 (second element)}
+}
 }
 \description{
-Compare model fits of two \code{droprate} objects estimated on the same data
+Compare model fits of \code{droprate} objects estimated on the same data.
+If one object is provided, the results of a deviance test against a model without a miss chance 'p'
+is reported. If two objects are provided, the results of a deviance test between the model fits of the two objects is provided.
 }
 \examples{
 data(goosedrop)

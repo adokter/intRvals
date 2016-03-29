@@ -6,7 +6,7 @@
 \usage{
 \method{plot}{droprate}(x, binsize = 20, xlab = "Interval",
   ylab = "Density", main = "Interval histogram and fit", line.col = "red",
-  ...)
+  line.lwd = 1, ...)
 }
 \arguments{
 \item{x}{An droprate class object}
@@ -21,7 +21,9 @@
 
 \item{line.col}{Color of the plotted curve for the model fit}
 
-\item{...}{Additional arguments to be passed to the low level plotting functions}
+\item{line.lwd}{Line width of the plotted curve for the model fit}
+
+\item{...}{Additional arguments to be passed to the low level \link[graphics]{hist} plotting function}
 }
 \value{
 This function returns a list with data, corresponding to the model fit

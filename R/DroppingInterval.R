@@ -60,11 +60,11 @@ load("~/git/R/droprate/data/goosedrop.RData")
 #' Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
 #' The time in seconds between wo subsequently observed dropping arrivals of a single individual refers to one dropping interval.
 #' The variables are as follows:
-#' \itemize{
-#'   \item \code{date}: observation start time of the interval
-#'   \item \code{interval}: length of the interval in seconds
-#'   \item \code{site}: observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)
-#'   \item \code{period}: observation period
+#' \describe{
+#'   \item{\code{date}}{observation start time of the interval}
+#'   \item{\code{interval}}{length of the interval in seconds}
+#'   \item{\code{site}}{observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)}
+#'   \item{\code{period}}{observation period}
 #' }
 
 #'
@@ -264,10 +264,11 @@ loglikinterval=function(data,mu,sigma,p,N=5L,fun="normal",trunc=c(0,Inf),fpp=0){
 #' @param x An droprate class object
 #' @param binsize Width of the histogram bins
 #' @param line.col Color of the plotted curve for the model fit
+#' @param line.lwd Line width of the plotted curve for the model fit
 #' @param main an overall title for the plot
 #' @param xlab a title for the x axis
 #' @param ylab a title for the y axis
-#' @param ... Additional arguments to be passed to the low level plotting functions
+#' @param ... Additional arguments to be passed to the low level \link[graphics]{hist} plotting function
 #' @export
 #' @return This function returns a list with data, corresponding to the model fit
 #' @examples
@@ -275,7 +276,7 @@ loglikinterval=function(data,mu,sigma,p,N=5L,fun="normal",trunc=c(0,Inf),fpp=0){
 #' dr=estinterval(goosedrop$interval)
 #' plot(dr)
 #' plot(dr,binsize=10,line.col='blue')
-plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', ...){
+plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', line.lwd=1, ...){
   object=x
   stopifnot(inherits(object, "droprate"))
   if(object$distribution=="normal"){
@@ -287,8 +288,8 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
     funcdf=gammapi
   }
   hist(object$data,freq=F,breaks=seq(0,max(object$data)+binsize,binsize),xlab=xlab,ylab=ylab,main=main,...)
-  plotfunc=function(x) probdens(x,object$mean,object$stdev,object$fractionMissed,object$N,fun=funpdf,funcdf=funcdf,trunc=object$trunc,fpp=object$fpp)
-  curve(plotfunc,0,1500,col=line.col,add=T)
+  plotfunc=function(x) probdens(x,object$mean,object$stdev,object$p,object$N,fun=funpdf,funcdf=funcdf,trunc=object$trunc,fpp=object$fpp)
+  curve(plotfunc,0,1500,col=line.col,lwd=line.lwd,add=T)
 }
 
 #' Estimate interval mean and variance accounting for missed arrival observations
@@ -312,7 +313,22 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' is fit to \code{data} by maximization of the
 #' associated log-likelihood using \link[stats]{optim}.
 #' @export
-#' @return This function returns an object of class \code{droprate}
+#' @return This function returns an object of class \code{droprate}, which is a list containing the following:
+#'   \item{\code{data}}{the interval data}
+#'   \item{\code{mean}}{the modelled mean interval}
+#'   \item{\code{stdev}}{the modelled interval standard deviation}
+#'   \item{\code{p}}{the modelled probability to not observe an arrival}
+#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[droprate]{intervalpdf}}
+#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[droprate]{intervalpdf}}
+#'   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
+#'   \item{\code{counts}}{counts field of \link[stats]{optim}}
+#'   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
+#'   \item{\code{df.residual}}{degrees of freedom, a 2-vector (1, number of intervals - \code{n.param})}
+#'   \item{\code{n.param}}{number of optimized model parameters}
+#'   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
+#'   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
+#'   \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter}
+
 #' @examples
 #' data(goosedrop)
 #' dr=estinterval(goosedrop$interval)
@@ -380,7 +396,7 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
     fpp.out=plogis(opt$par[4])
     n.opt=3
   }
-  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],fractionMissed=plogis(opt$par[3]),fpp=fpp.out,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-n.opt),distribution=fun,trunc=trunc,fpp.method=fpp.method)
+  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=plogis(opt$par[3]),fpp=fpp.out,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-n.opt),n.param=n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method)
   goodness.fit=pchisq(2*(out$loglik[1]-out$loglik[2]), df=out$df.residual[1], lower.tail=FALSE)
   if(goodness.fit>1-conf.level){
     warning("model including a miss probability is not significant.\n\nCheck convergence using different starting values (arguments: mu,sigma and p), or change the interval distribution (argument fun)")
@@ -479,6 +495,26 @@ interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,d
 #' @param ... further arguments passed to or from other methods.
 #' @export
 #' @return The function \code{summary.droprate} computes and returns a list of summary statistics
+#' \describe{
+#'   \item{\code{data}}{the interval data}
+#'   \item{\code{mean}}{the modelled mean interval}
+#'   \item{\code{stdev}}{the modelled interval standard deviation}
+#'   \item{\code{p}}{the modelled probability to not observe an arrival}
+#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[droprate]{intervalpdf}}
+#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[droprate]{intervalpdf}}
+#'   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
+#'   \item{\code{counts}}{counts field of \link[stats]{optim}}
+#'   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
+#'   \item{\code{df.residual}}{degrees of freedom, a 2-vector (1, number of intervals - \code{n.param})}
+#'   \item{\code{n.param}}{number of optimized model parameters}
+#'   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
+#'   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
+#'   \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter}
+#'   \item{\code{deviance}}{deviance between the fitted model and a model without a miss chance (i.e. \code{p}=0)}
+#'   \item{\code{p.value}}{numeric vector with two elements. First element contains the p.value for a
+#'   likelihood ratio (deviance) test between the fitted model and a model without a miss chance (i.e. \code{p}=0).
+#'   Second element contains the p.value for a likelihood ratio (deviance) test between the fitted model and a saturated null model.}
+#' }
 #' @examples
 #' data(goosedrop)
 #' dr=estinterval(goosedrop$interval)
@@ -503,7 +539,7 @@ print.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ...){
   cat("          number of intervals: ",format(signif(length(x$data),digits)),"\n\n")
   cat("            mean arrival rate: ",format(signif(x$mean,digits)),"\n")
   cat("           standard deviation: ",format(signif(x$stdev,digits)),"\n")
-  cat("              fraction missed: ",format(signif(x$fractionMissed)),"\n")
+  cat("              fraction missed: ",format(signif(x$p)),"\n")
   if(x$fpp.method=="auto"){
   cat("fraction random poisson (fpp): ",format(signif(x$fpp)),"\n")
   }
@@ -520,7 +556,7 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ..
 
   cat("             mean arrival interval: ",format(signif(x$mean,digits)),"\n")
   cat("                standard deviation: ",format(signif(x$stdev,digits)),"\n")
-  cat("   arrival observation probability: ",format(signif(1-x$fractionMissed))," (1-miss probability)\n")
+  cat("   arrival observation probability: ",format(signif(1-x$p))," (1-miss probability)\n")
   cat(" baseline fraction Poisson process: ",format(signif(x$fpp))," (fpp)\n\n")
 
   cat("  fitted interval distribution: ",x$distribution,"\n")
@@ -562,6 +598,12 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
   stopifnot(inherits(x, "droprate"))
   if (!is.null(y)){
     stopifnot(inherits(y, "droprate"))
+    if(length(x$data)!=length(y$data)){
+      samedata=F
+    }else{
+      samedata=length(which(!(sort(x$data) == sort(y$data))))==0
+    }
+    if(samedata) stop("droprate objects estimated on the same dataset")
   }
   alternative <- match.arg(alternative)
   if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
@@ -685,6 +727,8 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
                                            "greater"), conf.level = 0.95)
 {
   stopifnot(inherits(x, "droprate") && inherits(y, "droprate"))
+  samedata=length(which(!(sort(x$data) == sort(y$data))))==0
+  if(samedata) stop("droprate objects estimated on the same dataset")
   if (!((length(ratio) == 1L) && is.finite(ratio) && (ratio >
                                                       0)))
     stop("'ratio' must be a single positive number")
@@ -729,15 +773,27 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
   return(RVAL)
 }
 
-#' Compare model fits of two \code{droprate} objects estimated on the same data
-#' @title Compares model fits of two \code{droprate} objects
+#' Compare model fits of \code{droprate} objects estimated on the same data.
+#' If one object is provided, the results of a deviance test against a model without a miss chance 'p'
+#' is reported. If two objects are provided, the results of a deviance test between the model fits of the two objects is provided.
+#' @title Compares model fits of \code{droprate} objects
 #' @param object an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
-#' @param y an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
 #' @param conf.level confidence level for the deviance test
 #' @param digits the number of digits for printing to screen
 #' @param ... other arguments to be passed to low level functions
 #' @export
 #' @return A list of class "\code{anova.droprate}" with the best model (1 or 2), deviance statistic and test results
+#' \describe{
+#'   \item{\code{best.model}}{the index of the best model (1 is first argument, 2 is second)}
+#'   \item{\code{deviance}}{the deviance between the two tested models}
+#'   \item{\code{p.value}}{p-value for the deviance (likelihood-ratio) test}
+#'   \item{\code{conf.level}}{assumed confidence level for the test}
+#'   \item{\code{model1.call}}{call that generated model 1}
+#'   \item{\code{model2.call}}{call that generated model 2}
+#'   \item{\code{AIC}}{numeric 2-vector containg the AIC value for model 1 (first element) and model 2 (second element)}
+#'   \item{\code{loglik}}{numeric 2-vector containg the log-likelihood value for model 1 (first element) and model 2 (second element)}
+#' }
 #' @examples
 #' data(goosedrop)
 #' model1=estinterval(goosedrop$interval,fun="normal")
@@ -753,19 +809,30 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
 #' model3=estinterval(goosedrop$interval,fun="gamma",fpp=.05)
 #' # model3 performs as good as model1:
 #' anova(model1,model3)
-anova.droprate=function(object, y, conf.level = 0.95,digits = max(3L, getOption("digits") - 3L), ...)
+anova.droprate=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOption("digits") - 3L), ...)
 {
   x=object
   stopifnot(inherits(x, "droprate"))
-  stopifnot(inherits(y, "droprate"))
-  samedata=length(which(!(sort(x$data) == sort(y$data))))==0
-  if(!samedata) stop("droprate objects not estimated on the same dataset")
-  if(!(length(which(x$trunc!=y$trunc))==0)) stop("droprate objects do not have the same truncation range 'trunc'")
-  deviance=2*(x$loglik[1]-y$loglik[1])
-  p.value=pchisq(abs(deviance[1]), df=x$df.residual[1], lower.tail=FALSE)
-  if(deviance>0) bestmodel=1L else bestmodel=2L
-  if(deviance==0) bestmodel=NA
-  output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call=y$call)
+  if(!missing(y)){
+    stopifnot(inherits(y, "droprate"))
+    samedata=length(which(!(sort(x$data) == sort(y$data))))==0
+    if(!samedata) stop("droprate objects not estimated on the same dataset")
+    if(!(length(which(x$trunc!=y$trunc))==0)) stop("droprate objects do not have the same truncation range 'trunc'")
+    deviance=2*(x$loglik[1]-y$loglik[1])
+    # CHECK BELOW!
+    p.value=pchisq(abs(deviance), df=max(c(1,abs(x$n.param-y$n.param))), lower.tail=FALSE)
+    if(deviance>0) bestmodel=1L else bestmodel=2L
+    if(deviance==0) bestmodel=NA
+    output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call=y$call,AIC=c(2*x$n.param-2*x$loglik[1],2*y$n.param-2*y$loglik[1]),loglik=c(x$loglik[1],y$loglik[1]))
+  }
+  else{
+    deviance=2*(x$loglik[1]-x$loglik[2])
+    p.value=pchisq(abs(deviance), df=x$df.residual[1], lower.tail=FALSE)
+    if(deviance>0) bestmodel=1L else bestmodel=2L
+    if(deviance==0) bestmodel=NA
+    output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call="model 1 with miss chance p fixed to zero.",
+                AIC=c(2*x$n.param-2*x$loglik[1],2*(x$n.param-1)-2*x$loglik[2]),loglik=x$loglik)
+  }
   attr(output, "class") <- "anova.droprate"
   return(output)
 }
@@ -775,13 +842,18 @@ anova.droprate=function(object, y, conf.level = 0.95,digits = max(3L, getOption(
 #' @param x An object of class \code{anova.droprate}, usually a result of a call to \link[droprate]{anova.droprate}
 #' @keywords internal
 #' @export
+
 print.anova.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ...){
   stopifnot(inherits(x, "anova.droprate"))
   cat("Model 1 call: ",deparse(x$model1.call),"\n")
   cat("Model 2 call: ",deparse(x$model2.call),"\n\n")
 
   if(x$p.value<1-x$conf.level){
-    if(x$best.model==1) cat(paste("Model 1 outperforms Model 2, Pr(>Chi) = p =",format(signif(x$p.value,digits)),"\n"))
-    if(x$best.model==2) cat(paste("Model 2 outperforms Model 1, Pr(>Chi) = p =",format(signif(x$p.value,digits)),"\n"))
-  } else cat(paste("models are equivalent, Pr(>Chi) = p =",format(signif(x$p.value,digits)),"\n"))
+    if(x$best.model==1) cat(paste("Model 1 outperforms Model 2, Pr(>Chi) =",format(signif(x$p.value,digits)),"\n\n"))
+    if(x$best.model==2) cat(paste("Model 2 outperforms Model 1, Pr(>Chi) =",format(signif(x$p.value,digits)),"\n\n"))
+  } else{
+    cat(paste("models are equivalent, Pr(>Chi) =",format(signif(x$p.value,digits)),"\n\n"))
+  }
+  cat(paste("Model 1:   AIC =",format(signif(x$AIC[1],digits)), "   Loglik =",format(signif(x$loglik[1],digits)),"\n"))
+  cat(paste("Model 2:   AIC =",format(signif(x$AIC[2],digits)), "   Loglik =",format(signif(x$loglik[2],digits))))
 }

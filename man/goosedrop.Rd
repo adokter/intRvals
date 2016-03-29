@@ -13,11 +13,11 @@ The dataset contains observations from two sites: the island of Schiermonnikoog 
 Brent geese were observed continuously with spotting scopes, and the time when geese excreted a dropping was written down.
 The time in seconds between wo subsequently observed dropping arrivals of a single individual refers to one dropping interval.
 The variables are as follows:
-\itemize{
-  \item \code{date}: observation start time of the interval
-  \item \code{interval}: length of the interval in seconds
-  \item \code{site}: observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)
-  \item \code{period}: observation period
+\describe{
+  \item{\code{date}}{observation start time of the interval}
+  \item{\code{interval}}{length of the interval in seconds}
+  \item{\code{site}}{observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)}
+  \item{\code{period}}{observation period}
 }
 }
 \author{

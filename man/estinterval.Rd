@@ -35,7 +35,21 @@ in which case \code{fpp} is taken as start value in the optimisation}
 \item{...}{Additional arguments to be passed to \link[stats]{optim}}
 }
 \value{
-This function returns an object of class \code{droprate}
+This function returns an object of class \code{droprate}, which is a list containing the following:
+  \item{\code{data}}{the interval data}
+  \item{\code{mean}}{the modelled mean interval}
+  \item{\code{stdev}}{the modelled interval standard deviation}
+  \item{\code{p}}{the modelled probability to not observe an arrival}
+  \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[droprate]{intervalpdf}}
+  \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[droprate]{intervalpdf}}
+  \item{\code{convergence}}{convergence field of \link[stats]{optim}}
+  \item{\code{counts}}{counts field of \link[stats]{optim}}
+  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
+  \item{\code{df.residual}}{degrees of freedom, a 2-vector (1, number of intervals - \code{n.param})}
+  \item{\code{n.param}}{number of optimized model parameters}
+  \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
+  \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
+  \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter}
 }
 \description{
 Estimate interval mean and variance accounting for missed arrival observations
