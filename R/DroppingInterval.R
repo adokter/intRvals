@@ -727,7 +727,11 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
                                            "greater"), conf.level = 0.95)
 {
   stopifnot(inherits(x, "droprate") && inherits(y, "droprate"))
-  samedata=length(which(!(sort(x$data) == sort(y$data))))==0
+  if(length(x$data)!=length(y$data)){
+    samedata=F
+  }else{
+    samedata=length(which(!(sort(x$data) == sort(y$data))))==0
+  }
   if(samedata) stop("droprate objects estimated on the same dataset")
   if (!((length(ratio) == 1L) && is.finite(ratio) && (ratio >
                                                       0)))
