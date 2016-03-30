@@ -25,9 +25,10 @@
 #' The package comes with a test dataset \code{\link{goosedrop}}
 #'
 #' @references
-#' B\'{e}dard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
-#'
 #' Dokter et al. 2016 ???
+#' B\'{e}dard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
+#' Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905–917.
+#'
 #'
 "_PACKAGE"
 #> [1] "_PACKAGE"
@@ -128,10 +129,10 @@ probdens=function(x,mu,sigma,p,N,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
 #' @param p The probability that an arrival that marks the start or end of an interval is not observed
 #' @param N The maximum number of consecutive missed arrivals to take into consideration
 #' @param fun assumed distribution family of the true interval distribution, one of
-#' @param trunc Use a truncated probability density function with range \code{trunc}
-#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
 #'  "\code{normal}" or "\code{gamma}", corresponding
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.
+#' @param trunc Use a truncated probability density function with range \code{trunc}
+#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
 #' @export
 #' @return This function returns a list with data, corresponding to the model fit
 #' @details
@@ -198,7 +199,7 @@ intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5L,fun="normal",tr
     funpdf=gammai
     funcdf=gammapi
   }
-  data.frame(interval=data,density=probdens(data,mu,sigma,p,N,fun=funpdf,funcdf=funcdf,trunc=trunc))
+  data.frame(interval=data,density=probdens(data,mu,sigma,p,N,fpp=fpp,fun=funpdf,funcdf=funcdf,trunc=trunc))
 }
 
 # log-likelihood of an observed interval distribution

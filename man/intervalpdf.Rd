@@ -18,13 +18,13 @@ intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
 
 \item{N}{The maximum number of consecutive missed arrivals to take into consideration}
 
-\item{fun}{assumed distribution family of the true interval distribution, one of}
+\item{fun}{assumed distribution family of the true interval distribution, one of
+ "\code{normal}" or "\code{gamma}", corresponding
+to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.}
 
 \item{trunc}{Use a truncated probability density function with range \code{trunc}}
 
-\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
- "\code{normal}" or "\code{gamma}", corresponding
-to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.}
+\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
 }
 \value{
 This function returns a list with data, corresponding to the model fit
