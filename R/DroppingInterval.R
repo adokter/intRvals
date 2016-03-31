@@ -520,7 +520,7 @@ interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,d
   }
   if(method=="taylor"){
     rate.mean=1/data$mean
-    rate.stdev=data$mean/(data$stdev)^2
+    rate.stdev=data$stdev/(data$mean)^2
   }
   output=c(mean=rate.mean,stdev=rate.stdev)
   output
