@@ -5,7 +5,7 @@
 \title{Conversion of interval estimates to rates}
 \usage{
 interval2rate(data, minint = data$mean/100, maxint = data$mean + 3 *
-  data$stdev, digits = max(3L, getOption("digits") - 3L))
+  data$stdev, digits = max(3L, getOption("digits") - 3L), method = "exact")
 }
 \arguments{
 \item{data}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
@@ -15,6 +15,9 @@ interval2rate(data, minint = data$mean/100, maxint = data$mean + 3 *
 \item{maxint}{the maximum interval value up to which numerical integrations converting to rates are continued}
 
 \item{digits}{the number of digits for printing to screen}
+
+\item{method}{A string equal to 'exact' or 'taylor'. When 'exact' exact formula or numeric integration
+is used. When 'taylor' a Taylor approximation is used as in standard propagation of uncertainty in the case of division.}
 }
 \value{
 The function \code{interval2rate} computes and returns a named vector with the rate mean and standard deviation

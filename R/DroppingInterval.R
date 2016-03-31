@@ -441,6 +441,8 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
 #' @param minint the minimum interval value from which numerical integrations converting to rates are started
 #' @param maxint the maximum interval value up to which numerical integrations converting to rates are continued
 #' @param digits the number of digits for printing to screen
+#' @param method A string equal to 'exact' or 'taylor'. When 'exact' exact formula or numeric integration
+#' is used. When 'taylor' a Taylor approximation is used as in standard propagation of uncertainty in the case of division.
 #' @details
 #' \subsection{Normal-distributed intervals}{
 #' When inter-arrival times (intervals) \eqn{x} follow a normal distribution with mean \eqn{\mu} and
@@ -484,34 +486,41 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
 #' data(goosedrop)
 #' dr=estinterval(goosedrop$interval)
 #' interval2rate(dr)
-interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,digits = max(3L, getOption("digits") - 3L)){
+interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,digits = max(3L, getOption("digits") - 3L), method="exact"){
+  if (!(method=="exact" || method=="taylor")) stop("method needs to be either 'exact' or 'taylor'")
   stopifnot(inherits(data, "droprate"))
-  if(data$distribution=="normal"){
-    cat(paste("Numerically calculating rate mean and standard deviation\n  truncating normal distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
-    intinv=integrate(function(y) (1/y)*dnorm(y,mean=data$mean,sd=data$stdev),minint,maxint)
-    intinvcubed=integrate(function(y) (1/y^2)*dnorm(y,mean=data$mean,sd=data$stdev),minint,maxint)
-    rate.mean=intinv$value
-    rate.stdev=sqrt(intinvcubed$value-intinv$value^2)
-
-  }
-  if(data$distribution=="gamma"){
-    if(data$mean>sqrt(2)*data$stdev){
-      rate.mean=data$mean/(data$mean^2-data$stdev^2)
-      rate.stdev=sqrt(data$mean^2*data$stdev^2/((data$mean^2-2*data$stdev^2)*(data$mean^2-data$stdev^2)^2))
-    }
-    else if(data$mean>data$stdev){
-      rate.mean=data$mean/(data$mean^2-data$stdev^2)
-      cat(paste("Numerically calculating rate standard deviation\n  truncating gamma distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
-      intinvcubed=integrate(function(y) (1/y^2)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
-      rate.stdev=sqrt(intinvcubed$value-rate.mean^2)
-    }
-    else{
-      cat(paste("Numerically calculating rate mean and standard deviation\n  truncating gamma distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
-      intinv=integrate(function(y) (1/y)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
-      intinvcubed=integrate(function(y) (1/y^2)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+  if(method=="exact"){
+    if(data$distribution=="normal"){
+      cat(paste("Numerically calculating rate mean and standard deviation\n  truncating normal distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
+      intinv=integrate(function(y) (1/y)*dnorm(y,mean=data$mean,sd=data$stdev),minint,maxint)
+      intinvcubed=integrate(function(y) (1/y^2)*dnorm(y,mean=data$mean,sd=data$stdev),minint,maxint)
       rate.mean=intinv$value
       rate.stdev=sqrt(intinvcubed$value-intinv$value^2)
+
     }
+    if(data$distribution=="gamma"){
+      if(data$mean>sqrt(2)*data$stdev){
+        rate.mean=data$mean/(data$mean^2-data$stdev^2)
+        rate.stdev=sqrt(data$mean^2*data$stdev^2/((data$mean^2-2*data$stdev^2)*(data$mean^2-data$stdev^2)^2))
+      }
+      else if(data$mean>data$stdev){
+        rate.mean=data$mean/(data$mean^2-data$stdev^2)
+        cat(paste("Numerically calculating rate standard deviation\n  truncating gamma distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
+        intinvcubed=integrate(function(y) (1/y^2)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+        rate.stdev=sqrt(intinvcubed$value-rate.mean^2)
+      }
+      else{
+        cat(paste("Numerically calculating rate mean and standard deviation\n  truncating gamma distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
+        intinv=integrate(function(y) (1/y)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+        intinvcubed=integrate(function(y) (1/y^2)*dgamma(y,shape=data$mean^2/(data$stdev^2),scale=(data$stdev^2)/data$mean),minint,maxint)
+        rate.mean=intinv$value
+        rate.stdev=sqrt(intinvcubed$value-intinv$value^2)
+      }
+    }
+  }
+  if(method=="taylor"){
+    rate.mean=1/data$mean
+    rate.stdev=data$mean/(data$stdev)^2
   }
   output=c(mean=rate.mean,stdev=rate.stdev)
   output
