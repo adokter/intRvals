@@ -5,7 +5,7 @@
 \title{Probability density function of an observed interval distribution}
 \usage{
 intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
-  N = 5L, fun = "normal", trunc = c(0, Inf), fpp = 0)
+  N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = 0)
 }
 \arguments{
 \item{data}{A list of intervals for which to calculate the probability density}
@@ -55,16 +55,16 @@ probability density function, \eqn{\phi_{obs}}:
 In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 Be default the sum is ran up to N=5.
 }
-\subsection{Normal-distributed intervals}{
-By default intervals x are assumed to follow a \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
-with a probability density function \eqn{\phi(x)}:
-\deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
-}
-which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
 \subsection{Gamma-distributed intervals}{
-intervals x may also be assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
+By default intervals x are assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
 with a probability density function \eqn{\phi(x)}:
 \deqn{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}
+which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+}
+\subsection{Normal-distributed intervals}{
+intervals x may also be assumed to follow a Normal \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
+with a probability density function \eqn{\phi(x)}:
+\deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
 which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
 }
 }

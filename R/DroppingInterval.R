@@ -155,16 +155,16 @@ probdens=function(x,mu,sigma,p,N,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
 #' In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 #' Be default the sum is ran up to N=5.
 #' }
-#' \subsection{Normal-distributed intervals}{
-#' By default intervals x are assumed to follow a \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
-#' with a probability density function \eqn{\phi(x)}:
-#' \deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
-#' }
-#' which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
 #' \subsection{Gamma-distributed intervals}{
-#' intervals x may also be assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
+#' By default intervals x are assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
 #' with a probability density function \eqn{\phi(x)}:
 #' \deqn{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}{\phi(x|\mu,\sigma)~Gamma(\mu,\sigma)}
+#' which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+#' }
+#' \subsection{Normal-distributed intervals}{
+#' intervals x may also be assumed to follow a Normal \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
+#' with a probability density function \eqn{\phi(x)}:
+#' \deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
 #' which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
 #' }
 #' @examples
@@ -180,7 +180,7 @@ probdens=function(x,mu,sigma,p,N,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
 #' # peaks at integer multiples of the mean of the true
 #' # interval distribution
 #' plot(intervalpdf(mu=200,sigma=40,p=0.4),type='l',col='red')
-intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5L,fun="normal",trunc=c(0,Inf),fpp=0){
+intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
   if (!missing(mu) && (length(mu) != 1 || mu<=0 || is.na(mu))) stop("'mu' must be a single positive number")
   if (!missing(sigma) && (length(sigma) != 1 || sigma<=0 || is.na(sigma))) stop("'sigma' must be a single positive number")
   if (!missing(p) && (length(p) != 1 || !is.finite(p) ||
@@ -238,7 +238,7 @@ logliknull2=function(params,data,N,fun=normi,funcdf=normpi,trunc=c(0,Inf)) sum(l
 #' @examples
 #' data(goosedrop)
 #' loglikinterval(goosedrop$interval,mu=200,sigma=50,p=.3)
-loglikinterval=function(data,mu,sigma,p,N=5L,fun="normal",trunc=c(0,Inf),fpp=0){
+loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
   if (!missing(mu) && (length(mu) != 1 || mu<=0 || is.na(mu))) stop("'mu' must be a single positive number")
   if (!missing(sigma) && (length(sigma) != 1 || sigma<=0 || is.na(sigma))) stop("'sigma' must be a single positive number")
   if (!missing(p) && (length(p) != 1 || !is.finite(p) ||
@@ -365,7 +365,7 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' # the apparent statistical significance of the difference of means
 #' t.test(dr3$data,dr4$data)
 #'
-estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="normal",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="fixed",p.method="auto", conf.level = 0.95, ...){
+estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="fixed",p.method="auto", conf.level = 0.95, ...){
   call=sys.call()
   if(!missing(data) && length(data)<=2) stop("no or insufficient data points")
   if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")

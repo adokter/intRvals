@@ -4,7 +4,7 @@
 \alias{loglikinterval}
 \title{log-likelihood of an observed interval distribution}
 \usage{
-loglikinterval(data, mu, sigma, p, N = 5L, fun = "normal", trunc = c(0,
+loglikinterval(data, mu, sigma, p, N = 5L, fun = "gamma", trunc = c(0,
   Inf), fpp = 0)
 }
 \arguments{

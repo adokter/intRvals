@@ -5,7 +5,7 @@
 \title{Estimate interval mean and variance accounting for missed arrival observations}
 \usage{
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
-  N = 5L, fun = "normal", trunc = c(0, Inf), fpp = (if (fpp.method ==
+  N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = (if (fpp.method ==
   "fixed") 0 else 0.1), fpp.method = "fixed", p.method = "auto",
   conf.level = 0.95, ...)
 }
