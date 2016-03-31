@@ -398,7 +398,8 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
       optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
       fpp.out=fpp
       p.out=p
-      n.opt=2
+      # manual adjustment of miss chance treated as optimization, i.e. loss of one df
+      if(p==0) n.opt=2 else n.opt=3
     }
     else{
       opt=optim(par=c(mu,sigma,p.logit),loglikfn,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
@@ -414,7 +415,8 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
       optnull=optim(par=c(mu,sigma,fpp.logit),logliknull2,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
       p.out=p
       fpp.out=plogis(opt$par[3])
-      n.opt=3
+      # manual adjustment of miss chance treated as optimization, i.e. loss of one df
+      if(p==0) n.opt=3 else n.opt=4
     }
     else{
       opt=optim(par=c(mu,sigma,p.logit,fpp.logit),loglikfn2,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
