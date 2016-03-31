@@ -27,7 +27,7 @@
 #' @references
 #' Dokter et al. 2016 ???
 #' B\'{e}dard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
-#' Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905–917.
+#' Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
 #'
 #'
 "_PACKAGE"
@@ -207,6 +207,8 @@ loglik=function(data,mu,sigma,p,N,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) 
 # log-likelihood, with parameters to be optimised in list params
 loglikfn=function(params,data,N,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
 loglikfn2=function(params,data,N,fun=normi,funcdf=normpi,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[4]))))
+loglikfn3=function(params,data,N,fun=normi,funcdf=normpi,fpp=0,p=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],p=p,N=N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
+loglikfn4=function(params,data,N,fun=normi,funcdf=normpi,p=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
 # log-likelihood of a null model without miss chance (i.e. N=1, p=0)
 logliknull=function(params,data,N,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=fpp)))
 logliknull2=function(params,data,N,fun=normi,funcdf=normpi,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
@@ -304,8 +306,10 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions
 #' @param trunc Use a truncated probability density function with range \code{trunc}
 #' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
-#' @param fpp.method A string equal to 'fixed' or 'auto'. When 'auto' fpp is optimized as a free model parameter,
+#' @param fpp.method A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} is optimized as a free model parameter,
 #' in which case \code{fpp} is taken as start value in the optimisation
+#' @param p.method A string equal to 'fixed' or 'auto'. When 'auto' \code{p} is optimized as a free model parameter,
+#' in which case \code{p} is taken as start value in the optimisation
 #' @param conf.level Confidence level for deviance test that checks whether model with nonzero miss chance
 #' \code{p} significantly outperforms a model without a miss chance (\code{p=0}).
 #' @param ... Additional arguments to be passed to \link[stats]{optim}
@@ -315,6 +319,7 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' associated log-likelihood using \link[stats]{optim}.
 #' @export
 #' @return This function returns an object of class \code{droprate}, which is a list containing the following:
+#' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mean}}{the modelled mean interval}
 #'   \item{\code{stdev}}{the modelled interval standard deviation}
@@ -328,8 +333,9 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #'   \item{\code{n.param}}{number of optimized model parameters}
 #'   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
 #'   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
-#'   \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter}
-
+#'   \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} has been optimized as a free model parameter}
+#'   \item{\code{p.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{f} has been optimized as a free model parameter}
+#' }
 #' @examples
 #' data(goosedrop)
 #' dr=estinterval(goosedrop$interval)
@@ -359,7 +365,7 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' # the apparent statistical significance of the difference of means
 #' t.test(dr3$data,dr4$data)
 #'
-estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="normal",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="fixed", conf.level = 0.95, ...){
+estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="normal",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="fixed",p.method="auto", conf.level = 0.95, ...){
   call=sys.call()
   if(!missing(data) && length(data)<=2) stop("no or insufficient data points")
   if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
@@ -370,6 +376,7 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
   if (!missing(fpp) && (length(fpp) != 1 || !is.finite(fpp) ||
                       fpp < 0 || fpp > 1)) stop("'fpp' must be a single number between 0 and 1")
   if(!(fpp.method=="auto" | fpp.method=="fixed")) stop("'fpp.method' expected to be one of 'fixed' or 'auto'")
+  if(!(p.method=="auto" | p.method=="fixed")) stop("'p.method' expected to be one of 'fixed' or 'auto'")
   if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
   if(!(is.numeric(trunc) & length(trunc) == 2)) stop("'trunc' expected to be a numeric vector of length 2")
   if(min(data)<trunc[1] | max(data)>trunc[2]) warning("'data' contains values outside truncation range 'trunc'")
@@ -386,21 +393,41 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="norma
   p.logit=log(p/(1-p))
   if (fpp.method=="auto") fpp.logit=log(fpp/(1-fpp))
   if(fpp.method=="fixed"){
-    opt=optim(par=c(mu,sigma,p.logit),loglikfn,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
-    optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
-    fpp.out=fpp
-    n.opt=2
+    if(p.method=="fixed"){
+      opt=optim(par=c(mu,sigma),loglikfn3,data=data,p=p,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
+      optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
+      fpp.out=fpp
+      p.out=p
+      n.opt=2
+    }
+    else{
+      opt=optim(par=c(mu,sigma,p.logit),loglikfn,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
+      optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
+      fpp.out=fpp
+      p.out=plogis(opt$par[3])
+      n.opt=3
+    }
   }
   else{
-    opt=optim(par=c(mu,sigma,p.logit,fpp.logit),loglikfn2,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
-    optnull=optim(par=c(mu,sigma,fpp.logit),logliknull2,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
-    fpp.out=plogis(opt$par[4])
-    n.opt=3
+    if(p.method=="fixed"){
+      opt=optim(par=c(mu,sigma,fpp.logit),loglikfn4,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
+      optnull=optim(par=c(mu,sigma,fpp.logit),logliknull2,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
+      p.out=p
+      fpp.out=plogis(opt$par[3])
+      n.opt=3
+    }
+    else{
+      opt=optim(par=c(mu,sigma,p.logit,fpp.logit),loglikfn2,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
+      optnull=optim(par=c(mu,sigma,fpp.logit),logliknull2,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
+      p.out=plogis(opt$par[3])
+      fpp.out=plogis(opt$par[4])
+      n.opt=4
+    }
   }
-  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=plogis(opt$par[3]),fpp=fpp.out,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-n.opt),n.param=n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method)
+  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=p.out,fpp=fpp.out,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-n.opt),n.param=n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method)
   goodness.fit=pchisq(2*(out$loglik[1]-out$loglik[2]), df=out$df.residual[1], lower.tail=FALSE)
   if(goodness.fit>1-conf.level){
-    warning("model including a miss probability is not significant.\n\nCheck convergence using different starting values (arguments: mu,sigma and p), or change the interval distribution (argument fun)")
+    warning("model including a miss probability is not significant.\n\nCheck convergence using different starting values (arguments: mu,sigma and p). Consider including a random poisson process background (argument: fpp), or change of interval distribution (argument fun).")
   }
   class(out)="droprate"
   out
@@ -826,17 +853,19 @@ anova.droprate=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOp
     deviance=2*(x$loglik[1]-y$loglik[1])
     # CHECK BELOW!
     p.value=pchisq(abs(deviance), df=max(c(1,abs(x$n.param-y$n.param))), lower.tail=FALSE)
-    if(deviance>0) bestmodel=1L else bestmodel=2L
-    if(deviance==0) bestmodel=NA
-    output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call=y$call,AIC=c(2*x$n.param-2*x$loglik[1],2*y$n.param-2*y$loglik[1]),loglik=c(x$loglik[1],y$loglik[1]))
+    AIC=c(2*x$n.param-2*x$loglik[1],2*y$n.param-2*y$loglik[1])
+    if(AIC[1]<AIC[2]) bestmodel=1L else bestmodel=2L
+    if(AIC[1]==AIC[2]) bestmodel=NA
+    output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call=y$call,AIC=AIC,loglik=c(x$loglik[1],y$loglik[1]))
   }
   else{
     deviance=2*(x$loglik[1]-x$loglik[2])
     p.value=pchisq(abs(deviance), df=x$df.residual[1], lower.tail=FALSE)
-    if(deviance>0) bestmodel=1L else bestmodel=2L
-    if(deviance==0) bestmodel=NA
+    AIC=c(2*x$n.param-2*x$loglik[1],2*(x$n.param-1)-2*x$loglik[2])
+    if(AIC[1]<AIC[2]) bestmodel=1L else bestmodel=2L
+    if(AIC[1]==AIC[2]) bestmodel=NA
     output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call="model 1 with miss chance p fixed to zero.",
-                AIC=c(2*x$n.param-2*x$loglik[1],2*(x$n.param-1)-2*x$loglik[2]),loglik=x$loglik)
+                AIC=AIC,loglik=x$loglik)
   }
   attr(output, "class") <- "anova.droprate"
   return(output)

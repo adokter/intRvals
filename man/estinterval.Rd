@@ -6,7 +6,8 @@
 \usage{
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
   N = 5L, fun = "normal", trunc = c(0, Inf), fpp = (if (fpp.method ==
-  "fixed") 0 else 0.1), fpp.method = "fixed", conf.level = 0.95, ...)
+  "fixed") 0 else 0.1), fpp.method = "fixed", p.method = "auto",
+  conf.level = 0.95, ...)
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
@@ -26,8 +27,11 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
 
-\item{fpp.method}{A string equal to 'fixed' or 'auto'. When 'auto' fpp is optimized as a free model parameter,
+\item{fpp.method}{A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} is optimized as a free model parameter,
 in which case \code{fpp} is taken as start value in the optimisation}
+
+\item{p.method}{A string equal to 'fixed' or 'auto'. When 'auto' \code{p} is optimized as a free model parameter,
+in which case \code{p} is taken as start value in the optimisation}
 
 \item{conf.level}{Confidence level for deviance test that checks whether model with nonzero miss chance
 \code{p} significantly outperforms a model without a miss chance (\code{p=0}).}
@@ -36,6 +40,7 @@ in which case \code{fpp} is taken as start value in the optimisation}
 }
 \value{
 This function returns an object of class \code{droprate}, which is a list containing the following:
+\describe{
   \item{\code{data}}{the interval data}
   \item{\code{mean}}{the modelled mean interval}
   \item{\code{stdev}}{the modelled interval standard deviation}
@@ -49,7 +54,9 @@ This function returns an object of class \code{droprate}, which is a list contai
   \item{\code{n.param}}{number of optimized model parameters}
   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
-  \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter}
+  \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} has been optimized as a free model parameter}
+  \item{\code{p.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{f} has been optimized as a free model parameter}
+}
 }
 \description{
 Estimate interval mean and variance accounting for missed arrival observations

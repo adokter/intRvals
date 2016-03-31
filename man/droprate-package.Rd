@@ -33,6 +33,6 @@ The package comes with a test dataset \code{\link{goosedrop}}
 \references{
 Dokter et al. 2016 ???
 B\'{e}dard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
-Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905–917.
+Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
 }
 
