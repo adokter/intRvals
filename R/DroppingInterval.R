@@ -40,19 +40,19 @@
 # this not:
 # dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal")
 
-terschelling=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_terschelling.csv",colClasses=c("POSIXct","numeric"))
-schiermonnikoog=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_schier.csv",colClasses=c("POSIXct","numeric"))
-terschelling$site="terschelling"
-schiermonnikoog$site="schiermonnikoog"
-goosedrop=rbind(terschelling,schiermonnikoog)
+#terschelling=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_terschelling_elaborate.csv",colClasses=c("POSIXct","numeric","numeric","numeric","integer"))
+#schiermonnikoog=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_schier_elaborate.csv",colClasses=c("POSIXct","numeric","numeric","numeric","integer"))
+#terschelling$site="terschelling"
+#schiermonnikoog$site="schiermonnikoog"
+#goosedrop=rbind(terschelling,schiermonnikoog)
 # break up data in periods according to date
 MidPoints=as.POSIXct(c("2013-3-19", "2013-4-2", "2013-4-15", "2013-4-29", "2013-5-14"))
-goosedrop$period=NA
-goosedrop[goosedrop$date>=MidPoints[1] & goosedrop$date<MidPoints[2],]$period=1
-goosedrop[goosedrop$date>=MidPoints[2] & goosedrop$date<MidPoints[3],]$period=2
-goosedrop[goosedrop$date>=MidPoints[3] & goosedrop$date<MidPoints[4],]$period=3
-goosedrop[goosedrop$date>=MidPoints[4] & goosedrop$date<MidPoints[5],]$period=4
-goosedrop[goosedrop$date>=MidPoints[5],]$period=5
+#goosedrop$period=NA
+#goosedrop[goosedrop$date>=MidPoints[1] & goosedrop$date<MidPoints[2],]$period=1
+#goosedrop[goosedrop$date>=MidPoints[2] & goosedrop$date<MidPoints[3],]$period=2
+#goosedrop[goosedrop$date>=MidPoints[3] & goosedrop$date<MidPoints[4],]$period=3
+#goosedrop[goosedrop$date>=MidPoints[4] & goosedrop$date<MidPoints[5],]$period=4
+#goosedrop[goosedrop$date>=MidPoints[5],]$period=5
 #save(goosedrop,file="~/git/R/droprate/data/goosedrop.RData")
 load("~/git/R/droprate/data/goosedrop.RData")
 #' Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)
@@ -64,14 +64,15 @@ load("~/git/R/droprate/data/goosedrop.RData")
 #' \describe{
 #'   \item{\code{date}}{observation start time of the interval}
 #'   \item{\code{interval}}{length of the interval in seconds}
+#'   \item{\code{bout_length}}{total observation time of individual}
+#'   \item{\code{prop_abdomen_seen}}{proportion of total observation time when abdomen could be observed}
+#'   \item{\code{bout_id}}{intervals belonging to the same observation bout of an individual have the same \code{bout_id}}
 #'   \item{\code{site}}{observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)}
 #'   \item{\code{period}}{observation period}
 #' }
-
 #'
 #' @author Adriaan Dokter \email{a.m.dokter@uva.nl}
 "goosedrop"
-
 
 # normal distribution for (i-1) missed arrivals component of the
 # probability density function (PDF)

@@ -4,7 +4,7 @@
 \name{goosedrop}
 \alias{goosedrop}
 \title{Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)}
-\format{An object of class \code{data.frame} with 705 rows and 4 columns.}
+\format{An object of class \code{data.frame} with 705 rows and 7 columns.}
 \usage{
 goosedrop
 }
@@ -16,6 +16,9 @@ The variables are as follows:
 \describe{
   \item{\code{date}}{observation start time of the interval}
   \item{\code{interval}}{length of the interval in seconds}
+  \item{\code{bout_length}}{total observation time of individual}
+  \item{\code{prop_abdomen_seen}}{proportion of total observation time when abdomen could be observed}
+  \item{\code{bout_id}}{intervals belonging to the same observation bout of an individual have the same \code{bout_id}}
   \item{\code{site}}{observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)}
   \item{\code{period}}{observation period}
 }
