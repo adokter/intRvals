@@ -54,7 +54,7 @@ MidPoints=as.POSIXct(c("2013-3-19", "2013-4-2", "2013-4-15", "2013-4-29", "2013-
 #goosedrop[goosedrop$date>=MidPoints[4] & goosedrop$date<MidPoints[5],]$period=4
 #goosedrop[goosedrop$date>=MidPoints[5],]$period=5
 #save(goosedrop,file="~/git/R/droprate/data/goosedrop.RData")
-load("~/git/R/droprate/data/goosedrop.RData")
+#load("~/git/R/droprate/data/goosedrop.RData")
 #' Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)
 #'
 #' The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
