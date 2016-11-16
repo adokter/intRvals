@@ -26,20 +26,6 @@ The function \code{interval2rate} computes and returns a named vector with the r
 Conversion of interval estimates to rates
 }
 \details{
-\subsection{Normal-distributed intervals}{
-When inter-arrival times (intervals) \eqn{x} follow a normal distribution with mean \eqn{\mu} and
-standard deviation \eqn{\sigma}, i.e. follow the probability density function
-\code{\link[stats]{Normal}(mean=}\eqn{\mu}\code{, sd=}\eqn{\sigma)},
- then the mean rate (\eqn{\mu_{rate}}) can be calculated numerically by:
- \deqn{\mu_{rate}=\int_0^\infty (1/x) * \phi(x | \mu,\sigma)}
- and the variance of the rate (\eqn{\sigma^2_{rate}}) by:
- \deqn{\sigma^2_{rate}=\int_0^\infty (1/x^2) * \phi(x | \mu,\sigma) -\mu_{rate}^2}
-}
-This approximation is only valid for distributions that have a negligable
-density near \eqn{x=0}, so that the distribution can be effectively
- truncated before \eqn{x} approaches zero, where the integral is not defined.
-For interval data with many intervals \eqn{x}
-near zero, use of a gamma distribution is recommended instead.
 \subsection{Gamma-distributed intervals}{
 When inter-arrival times (intervals) follow a gamma distribution with mean \eqn{\mu} and
 standard deviation \eqn{\sigma}, i.e. follow the probability density function
@@ -60,7 +46,21 @@ above formula are used to calculate the estimated mean and variance of the arriv
 
 If these formula cannot be used (because the provisions on the value
 of \eqn{\alpha} are not met), numerical integration is used instead,
-analagous to the procedure for normal-distributed intervals.
+analagous to the procedure for normal-distributed intervals, see below.
+}
+\subsection{Normal-distributed intervals}{
+When inter-arrival times (intervals) \eqn{x} follow a normal distribution with mean \eqn{\mu} and
+standard deviation \eqn{\sigma}, i.e. follow the probability density function
+\code{\link[stats]{Normal}(mean=}\eqn{\mu}\code{, sd=}\eqn{\sigma)},
+ then the mean rate (\eqn{\mu_{rate}}) can be calculated numerically by:
+ \deqn{\mu_{rate}=\int_0^\infty (1/x) * \phi(x | \mu,\sigma)}
+ and the variance of the rate (\eqn{\sigma^2_{rate}}) by:
+ \deqn{\sigma^2_{rate}=\int_0^\infty (1/x^2) * \phi(x | \mu,\sigma) -\mu_{rate}^2}
+This approximation is only valid for distributions that have a negligable
+density near \eqn{x=0}, such that the distribution can be effectively
+ truncated before \eqn{x} approaches zero, where the integral is not defined.
+For interval data with intervals \eqn{x}
+near zero, use of a gamma distribution is recommended instead.
 }
 }
 \examples{

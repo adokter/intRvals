@@ -304,7 +304,7 @@ Mstep=function(data,random,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.m
 #' Refer to \link[intRval]{intervalpdf} for details on the functional form of
 #' the probability density function of an observed interval distribution \eqn{\phi_{obs}}.
 #' The log-likelihood \eqn{L} given a set of intervals {\eqn{x_j}} in \code{data} is given by
-#' \deqn{L(\mu,\sigma,p)=\sum_j \phi_{obs}(x_j | \mu,\sigma,p)}
+#' \deqn{L(\mu,\sigma,p)=\log \sum_j \phi_{obs}(x_j | \mu,\sigma,p)}
 #' The function is provided to allow likelihood maximisation by other optimization
 #' tools than the default by \link[stats]{optim}. For example when standard errors or
 #' parameter correlations are required, Monte-Carlo Markov chain methods may be
@@ -545,24 +545,24 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma
   opt=optim(par=optpars$par,optpars$L,data=data,p=p,fpp=fpp,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,control=list(fnscale=-1))
   optnull=optim(par=optpars$par.null,fn=optpars$L.null,data=data,N=1,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
 
-  # mixed model trials
-  improvement=1
-  sigma.between=30
-  counter=0
-  while(counter<20){
-    ResultEstep=Estep(intervals=data,mu=mu,sigma=sigma,sigma.between=sigma.between,fpp=fpp,p=p,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,groups=group)
-#    print(ResultEstep$partiallik)
-    print(paste("E-step: LogLik =",ResultEstep$loglik,"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2)))
-    ResultMstep=Mstep(data=data,random=ResultEstep$random,mu,sigma,sigma.between=sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.method,p.method)
-    p=ResultMstep$p
-    fpp=ResultMstep$fpp
-    mu=ResultMstep$mu
-    sigma=ResultMstep$sigma
-    sigma.between=ResultMstep$sigma.between
-    improvement=ResultEstep$loglik-ResultMstep$loglik
-    counter=counter+1
-    print(paste("M-step:","LogLik =",round(ResultMstep$loglik,1),"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2), "DeltaL =",round(improvement,1)))
-  }
+#  # mixed model trials
+#  improvement=1
+#  sigma.between=30
+#  counter=0
+#  while(counter<20){
+#    ResultEstep=Estep(intervals=data,mu=mu,sigma=sigma,sigma.between=sigma.between,fpp=fpp,p=p,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,groups=group)
+#    print(paste("E-step: LogLik =",ResultEstep$loglik,"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2)))
+#    ResultMstep=Mstep(data=data,random=ResultEstep$random,mu,sigma,sigma.between=sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.method,p.method)
+#    p=ResultMstep$p
+#    fpp=ResultMstep$fpp
+#    mu=ResultMstep$mu
+#    sigma=ResultMstep$sigma
+#    sigma.between=ResultMstep$sigma.between
+#    improvement=ResultEstep$loglik-ResultMstep$loglik
+#    counter=counter+1
+#    print(paste("M-step:","LogLik =",round(ResultMstep$loglik,1),"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2), "DeltaL =",round(improvement,1)))
+#  }
+
   # prepare optimization-specific output
   out.prep=prepare.output(opt,fpp,p,fpp.method,p.method)
   # prepare output
@@ -654,20 +654,6 @@ intervalsim=function(n=500,mu=200,sigma=40,p=0.3,fun="gamma",trunc=c(0,600),fpp=
 #' @param method A string equal to 'exact' or 'taylor'. When 'exact' exact formula or numeric integration
 #' is used. When 'taylor' a Taylor approximation is used as in standard propagation of uncertainty in the case of division.
 #' @details
-#' \subsection{Normal-distributed intervals}{
-#' When inter-arrival times (intervals) \eqn{x} follow a normal distribution with mean \eqn{\mu} and
-#' standard deviation \eqn{\sigma}, i.e. follow the probability density function
-#' \code{\link[stats]{Normal}(mean=}\eqn{\mu}\code{, sd=}\eqn{\sigma)},
-#'  then the mean rate (\eqn{\mu_{rate}}) can be calculated numerically by:
-#'  \deqn{\mu_{rate}=\int_0^\infty (1/x) * \phi(x | \mu,\sigma)}
-#'  and the variance of the rate (\eqn{\sigma^2_{rate}}) by:
-#'  \deqn{\sigma^2_{rate}=\int_0^\infty (1/x^2) * \phi(x | \mu,\sigma) -\mu_{rate}^2}
-#' }
-#' This approximation is only valid for distributions that have a negligable
-#' density near \eqn{x=0}, so that the distribution can be effectively
-#'  truncated before \eqn{x} approaches zero, where the integral is not defined.
-#' For interval data with many intervals \eqn{x}
-#' near zero, use of a gamma distribution is recommended instead.
 #' \subsection{Gamma-distributed intervals}{
 #' When inter-arrival times (intervals) follow a gamma distribution with mean \eqn{\mu} and
 #' standard deviation \eqn{\sigma}, i.e. follow the probability density function
@@ -688,7 +674,21 @@ intervalsim=function(n=500,mu=200,sigma=40,p=0.3,fun="gamma",trunc=c(0,600),fpp=
 #'
 #' If these formula cannot be used (because the provisions on the value
 #' of \eqn{\alpha} are not met), numerical integration is used instead,
-#' analagous to the procedure for normal-distributed intervals.
+#' analagous to the procedure for normal-distributed intervals, see below.
+#' }
+#' \subsection{Normal-distributed intervals}{
+#' When inter-arrival times (intervals) \eqn{x} follow a normal distribution with mean \eqn{\mu} and
+#' standard deviation \eqn{\sigma}, i.e. follow the probability density function
+#' \code{\link[stats]{Normal}(mean=}\eqn{\mu}\code{, sd=}\eqn{\sigma)},
+#'  then the mean rate (\eqn{\mu_{rate}}) can be calculated numerically by:
+#'  \deqn{\mu_{rate}=\int_0^\infty (1/x) * \phi(x | \mu,\sigma)}
+#'  and the variance of the rate (\eqn{\sigma^2_{rate}}) by:
+#'  \deqn{\sigma^2_{rate}=\int_0^\infty (1/x^2) * \phi(x | \mu,\sigma) -\mu_{rate}^2}
+#' This approximation is only valid for distributions that have a negligable
+#' density near \eqn{x=0}, such that the distribution can be effectively
+#'  truncated before \eqn{x} approaches zero, where the integral is not defined.
+#' For interval data with intervals \eqn{x}
+#' near zero, use of a gamma distribution is recommended instead.
 #' }
 #' @export
 #' @return The function \code{interval2rate} computes and returns a named vector with the rate mean and standard deviation
