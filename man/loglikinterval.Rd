@@ -10,9 +10,9 @@ loglikinterval(data, mu, sigma, p, N = 5L, fun = "gamma", trunc = c(0,
 \arguments{
 \item{data}{A numeric list of intervals.}
 
-\item{mu}{mean arrival rate.}
+\item{mu}{mean arrival interval.}
 
-\item{sigma}{standard deviation of the arrival rate.}
+\item{sigma}{standard deviation of the arrival interval.}
 
 \item{p}{chance to not observe an arrival.}
 
@@ -23,7 +23,7 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 
 \item{trunc}{Use a truncated probability density function with range \code{trunc}}
 
-\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
+\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}}
 }
 \value{
 returns the value of the loglikelihood
@@ -32,7 +32,7 @@ returns the value of the loglikelihood
 log-likelihood of an observed interval distribution
 }
 \details{
-Refer to \link[droprate]{intervalpdf} for details on the functional form of
+Refer to \link[intRval]{intervalpdf} for details on the functional form of
 the probability density function of an observed interval distribution \eqn{\phi_{obs}}.
 The log-likelihood \eqn{L} given a set of intervals {\eqn{x_j}} in \code{data} is given by
 \deqn{L(\mu,\sigma,p)=\sum_j \phi_{obs}(x_j | \mu,\sigma,p)}

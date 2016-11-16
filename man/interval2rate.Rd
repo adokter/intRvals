@@ -8,7 +8,7 @@ interval2rate(data, minint = data$mean/100, maxint = data$mean + 3 *
   data$stdev, digits = max(3L, getOption("digits") - 3L), method = "exact")
 }
 \arguments{
-\item{data}{An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{data}{An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
 
 \item{minint}{the minimum interval value from which numerical integrations converting to rates are started}
 

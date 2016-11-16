@@ -2,15 +2,15 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{ttest}
 \alias{ttest}
-\title{Student's t-test to compare two means of objects of class \code{droprate}}
+\title{Student's t-test to compare two means of objects of class \code{intRval}}
 \usage{
 ttest(x, y = NULL, alternative = c("two.sided", "less", "greater"),
   mu = 0, var.equal = FALSE, conf.level = 0.95)
 }
 \arguments{
-\item{x}{an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{x}{an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
 
-\item{y}{an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}}
+\item{y}{an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
 
 \item{alternative}{a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.}
 
@@ -24,7 +24,7 @@ ttest(x, y = NULL, alternative = c("two.sided", "less", "greater"),
 A list with class "\code{htest}" containing the same components as in \link[stats]{t.test}
 }
 \description{
-Performs one and two sample t-tests on objects of class \code{droprate}
+Performs one and two sample t-tests on objects of class \code{intRval}
 }
 \details{
 \code{alternative = "greater"} is the alternative that \code{x} has a larger mean than \code{y}.

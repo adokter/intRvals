@@ -7,14 +7,14 @@
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
   N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = (if (fpp.method ==
   "fixed") 0 else 0.1), fpp.method = "fixed", p.method = "auto",
-  conf.level = 0.95, ...)
+  conf.level = 0.95, group = NA, ...)
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
 
-\item{mu}{Start value for the numeric optimization for the mean arrival rate.}
+\item{mu}{Start value for the numeric optimization for the mean arrival interval.}
 
-\item{sigma}{Start value for the numeric optimization for the standard deviation of the arrival rate.}
+\item{sigma}{Start value for the numeric optimization for the standard deviation of the arrival interval.}
 
 \item{p}{Start value for the numeric optimization for the probability to miss an observation of an arrival.}
 
@@ -25,7 +25,7 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 
 \item{trunc}{Use a truncated probability density function with range \code{trunc}}
 
-\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
+\item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}}
 
 \item{fpp.method}{A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} is optimized as a free model parameter,
 in which case \code{fpp} is taken as start value in the optimisation}
@@ -39,14 +39,14 @@ in which case \code{p} is taken as start value in the optimisation}
 \item{...}{Additional arguments to be passed to \link[stats]{optim}}
 }
 \value{
-This function returns an object of class \code{droprate}, which is a list containing the following:
+This function returns an object of class \code{intRval}, which is a list containing the following:
 \describe{
   \item{\code{data}}{the interval data}
   \item{\code{mean}}{the modelled mean interval}
   \item{\code{stdev}}{the modelled interval standard deviation}
   \item{\code{p}}{the modelled probability to not observe an arrival}
-  \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[droprate]{intervalpdf}}
-  \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[droprate]{intervalpdf}}
+  \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
+  \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
   \item{\code{counts}}{counts field of \link[stats]{optim}}
   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
@@ -62,7 +62,7 @@ This function returns an object of class \code{droprate}, which is a list contai
 Estimate interval mean and variance accounting for missed arrival observations
 }
 \details{
-The probability density function for observed intervals \link[droprate]{intervalpdf}
+The probability density function for observed intervals \link[intRval]{intervalpdf}
 is fit to \code{data} by maximization of the
 associated log-likelihood using \link[stats]{optim}.
 }
@@ -94,6 +94,7 @@ ttest(dr3,dr4)
 # larger difference in means, which also increases
 # the apparent statistical significance of the difference of means
 t.test(dr3$data,dr4$data)
+
 
 }
 

@@ -1,24 +1,24 @@
 #' Analyse interval data with missed arrival observations
 #'
-#' Droprate allows you to calculate mean arrival intervals
-#' and compare means and variances of groups of interval data,
-#' while taking into account missed arrival observations
+#' \pkg{intRval} calculates means and variances of arrival intervals
+#' corrected for missed arrival observations, and compares means
+#'  and variances of groups of interval data.
 #'
-#' The central function of package \pkg{droprate} is
+#' The central function of package \pkg{intRval} is
 #' \code{\link{estinterval}}, which can be used to estimate the
 #' mean arrival interval (and its standard deviation) from interval
 #' data with missed arrivals. This is
 #' achieved by fitting the theoretical probability density
 #' \code{\link{intervalpdf}} to the interval data
 #'
+#' The package was designed originally for analysing dropping intervals
+#' of grazing geese to estimate their faecal output, but can be used to analyse general
+#' interval data where intervals are derived from distinct arrival observations.
 #'
-#' This package was designed initially for
-#' analysing dropping intervals of grazing geese, but can be used to analyse any
-#' kind of interval data derived from distinct arrival observations.
-#' One interval is defined as the time between observing a dropping be excreted, until the time the
-#' next dropping is excreted. The package provides a way of taking into account missed observations
-#' (excreted droppings), which leads to occasional observed intervals at integer multiples of the
-#' true dropping interval.
+#' Intervals are defined as the time between observed arrival events (e.g. the time between one excreted droppings to the next)
+#' The package provides a way of taking into account missed observations
+#' (excreted droppings), which lead to occasional observed intervals at integer multiples of the
+#' true arrival interval.
 #'
 #' Sets of interval data can be compared using \code{\link{ttest}} and \code{\link{vartest}}
 #'
@@ -26,7 +26,9 @@
 #'
 #' @references
 #' Dokter et al. 2016 ???
+#'
 #' B\'{e}dard, J. & Gauthier, G. (1986) Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
+#'
 #' Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
 #'
 #'
@@ -36,12 +38,13 @@
 
 ## open problem convergence:
 # this works:
-# dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal",mu=247,sigma=83)
+# dr.schiermonnikoog=intRval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal",mu=247,sigma=83)
 # this not:
-# dr.schiermonnikoog=droprate(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal")
+# dr.schiermonnikoog=intRval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fun="normal")
 
 #terschelling=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_terschelling_elaborate.csv",colClasses=c("POSIXct","numeric","numeric","numeric","integer"))
 #schiermonnikoog=read.csv("~/Dropbox/metawad/veldwerk terschelling/dropping_intervals_schier_elaborate.csv",colClasses=c("POSIXct","numeric","numeric","numeric","integer"))
+#schiermonnikoog$bout_id=schiermonnikoog$bout_id+max(terschelling$bout_id)
 #terschelling$site="terschelling"
 #schiermonnikoog$site="schiermonnikoog"
 #goosedrop=rbind(terschelling,schiermonnikoog)
@@ -53,8 +56,8 @@ MidPoints=as.POSIXct(c("2013-3-19", "2013-4-2", "2013-4-15", "2013-4-29", "2013-
 #goosedrop[goosedrop$date>=MidPoints[3] & goosedrop$date<MidPoints[4],]$period=3
 #goosedrop[goosedrop$date>=MidPoints[4] & goosedrop$date<MidPoints[5],]$period=4
 #goosedrop[goosedrop$date>=MidPoints[5],]$period=5
-#save(goosedrop,file="~/git/R/droprate/data/goosedrop.RData")
-#load("~/git/R/droprate/data/goosedrop.RData")
+#save(goosedrop,file="~/git/R/intRval/data/goosedrop.RData")
+#load("~/git/R/intRval/data/goosedrop.RData")
 #' Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)
 #'
 #' The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
@@ -74,46 +77,81 @@ MidPoints=as.POSIXct(c("2013-3-19", "2013-4-2", "2013-4-15", "2013-4-29", "2013-
 #' @author Adriaan Dokter \email{a.m.dokter@uva.nl}
 "goosedrop"
 
+# small number, used to maintain numerical stability
+eps=.Machine$double.xmin
+
 # normal distribution for (i-1) missed arrivals component of the
 # probability density function (PDF)
 normi=  function(x,mu,sigma,p,i) (p^(i-1)-p^i)*dnorm(x,i*mu,sqrt(i)*sigma)
-normpi=  function(x,mu,sigma,p,i) (p^(i-1)-p^i)*pnorm(x,i*mu,sqrt(i)*sigma)
+normpi= function(x,mu,sigma,p,i) (p^(i-1)-p^i)*pnorm(x,i*mu,sqrt(i)*sigma)
 # gamma distribution for (i-1) missed arrivals component of the PDF
-gammai=  function(x,mu,sigma,p,i) (p^(i-1)-p^i)*dgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/mu)
-gammapi=  function(x,mu,sigma,p,i) (p^(i-1)-p^i)*pgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/mu)
+gammai= function(x,mu,sigma,p,i) (p^(i-1)-p^i)*dgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/abs(mu))
+gammapi=function(x,mu,sigma,p,i) (p^(i-1)-p^i)*pgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/abs(mu))
 
-# normalized sum of all components of the PDF
-normsum=function(x,mu,sigma,p,N,fun=normi) sapply(1:N,FUN=fun,x=x,p=p,mu=mu,sigma=sigma)
+# normalized list of all components i of the PDF
+pdfcomponents=function(x,mu,sigma,p,N=5L,fun=normi) sapply(1:N,FUN=fun,x=x,p=p,mu=mu,sigma=sigma)
 
 # the cumulative density function
-cdf=function(x,mu,sigma,p,N,fun=normpi,fpp=0) {
+cdf=function(x,mu,sigma,p,N=5L,fun=normpi,fpp=0) {
   if(length(x)>1){
     if(fpp==0){
-      return(rowSums(normsum(x,mu,sigma,p,N,fun=fun)))
-    } else return((1-fpp)*rowSums(normsum(x,mu,sigma,p,N,fun=fun)) + fpp*rowSums(normsum(x,mu,mu,p,N,fun=gammapi)))
+      return(rowSums(pdfcomponents(x,mu,sigma,p,N,fun=fun)))
+    } else return((1-fpp)*rowSums(pdfcomponents(x,mu,sigma,p,N,fun=fun)) + fpp*rowSums(pdfcomponents(x,mu,mu,p,N,fun=gammapi)))
   } else{
     if(fpp==0){
-      return(sum(normsum(x,mu,sigma,p,N,fun=fun)))
+      return(sum(pdfcomponents(x,mu,sigma,p,N,fun=fun)))
     }
-    else return((1-fpp)*sum(normsum(x,mu,sigma,p,N,fun=fun))+fpp*sum(normsum(x,mu,mu,p,N,fun=gammapi)))
+    else return((1-fpp)*sum(pdfcomponents(x,mu,sigma,p,N,fun=fun))+fpp*sum(pdfcomponents(x,mu,mu,p,N,fun=gammapi)))
   }
 }
 
 # the PDF
-probdens=function(x,mu,sigma,p,N,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
+probdens=function(x,mu,sigma,p,N=5L,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
   if(is.numeric(trunc)){
     normfactor=cdf(trunc[2],mu,sigma,p,N,fun=funcdf,fpp=fpp)-cdf(trunc[1],mu,sigma,p,N,fun=funcdf,fpp=fpp)
   } else normfactor=1
   if(length(x)>1){
     if(fpp==0){
-      return(rowSums(normsum(x,mu,sigma,p,N,fun=fun))/normfactor)
-    } else return(((1-fpp)*rowSums(normsum(x,mu,sigma,p,N,fun=fun)) + fpp*rowSums(normsum(x,mu,mu,p,N,fun=gammai)))/normfactor)
+      return(rowSums(pdfcomponents(x,mu,sigma,p,N,fun=fun))/normfactor)
+    } else return(((1-fpp)*rowSums(pdfcomponents(x,mu,sigma,p,N,fun=fun)) + fpp*rowSums(pdfcomponents(x,mu,mu,p,N,fun=gammai)))/normfactor)
   } else{
     if(fpp==0){
-      return(sum(normsum(x,mu,sigma,p,N,fun=fun))/normfactor)
+      return(sum(pdfcomponents(x,mu,sigma,p,N,fun=fun))/normfactor)
     }
-    else return(((1-fpp)*sum(normsum(x,mu,sigma,p,N,fun=fun))+fpp*sum(normsum(x,mu,mu,p,N,fun=gammai)))/normfactor)
+    else return(((1-fpp)*sum(pdfcomponents(x,mu,sigma,p,N,fun=fun))+fpp*sum(pdfcomponents(x,mu,mu,p,N,fun=gammai)))/normfactor)
   }
+}
+
+# the PDF for mixed model
+probdensM=function(x,mu,sigma,p,N=5L,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)){
+  mapply(probdens,x,mu,MoreArgs=list(sigma=sigma,p=p,N=N,fun=fun,fpp=fpp,funcdf=funcdf,trunc=trunc))
+}
+
+# check of common input arguments
+checkargs = function(data=c(1,2),mu=1,sigma=1,p=0.2,N=5L,n=1L,fun="gamma",trunc=c(0,Inf),fpp=0,fpp.method="fixed",p.method="auto", conf.level = 0.95,sigma.between=NA,n.ind=NA,group=NA){
+  if(class(data) != "numeric") stop("'data' should be numeric vector with intervals")
+  if(!missing(data) && length(data)<=2) stop("no or insufficient data points")
+  if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
+  if(!is.na(sigma.between)){
+    if(!missing(group) && length(group)!=length(data)) stop("'group' should be a vector of equal length as 'data'")
+    if(is.na(n.ind)) stop("n.ind should be a numeric integer")
+  }
+  if (!missing(mu) && (length(mu) != 1 || mu<=0 || is.na(mu))) stop("'mu' must be a single positive number")
+  if (!missing(sigma) && (length(sigma) != 1 || sigma<=0 || is.na(sigma))) stop("'sigma' must be a single positive number")
+  if (!missing(p) && (length(p) != 1 || !is.finite(p) ||
+                      p < 0 || p > 1)) stop("'p' must be a single number between 0 and 1")
+  if (!missing(fpp) && (length(fpp) != 1 || !is.finite(fpp) ||
+                        fpp < 0 || fpp > 1)) stop("'fpp' must be a single number between 0 and 1")
+  if(!(fpp.method=="auto" | fpp.method=="fixed")) stop("'fpp.method' expected to be one of 'fixed' or 'auto'")
+  if(!(p.method=="auto" | p.method=="fixed")) stop("'p.method' expected to be one of 'fixed' or 'auto'")
+  if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
+  if(!(N%%1==0 & N>=0)) stop("'N' expected to be an integer larger than 0")
+  if(!(n%%1==0 & n>=0)) stop("'n' expected to be an integer larger than 0")
+  if(!is.na(n.ind) && !(n.ind%%1==0 & n>=0)) stop("'n.ind' expected to be an integer larger than 0")
+  if(!(is.numeric(trunc) & length(trunc) == 2)) stop("'trunc' expected to be a numeric vector of length 2")
+  if(min(data)<trunc[1] | max(data)>trunc[2]) warning("'data' contains values outside truncation range 'trunc'")
+  if (!missing(conf.level) && (length(conf.level) != 1 || !is.finite(conf.level) ||
+                               conf.level < 0 || conf.level > 1)) stop("'conf.level' must be a single number between 0 and 1")
 }
 
 
@@ -152,7 +190,7 @@ probdens=function(x,mu,sigma,p,N,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
 #' standard uncertainty propagation in the case of addition. Both in the case
 #' of normal and gamma-distributed intervals (see next subsections) we may write for the observed
 #' probability density function, \eqn{\phi_{obs}}:
-#' \deqn{\phi_{obs}(x | \mu, \sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma^2)}{\phi_{obs}(x | \mu,\sigma^2,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,i \sigma)}
+#' \deqn{\phi_{obs}(x | \mu, \sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}{\phi_{obs}(x | \mu,\sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}
 #' In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 #' Be default the sum is ran up to N=5.
 #' }
@@ -182,16 +220,7 @@ probdens=function(x,mu,sigma,p,N,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)) {
 #' # interval distribution
 #' plot(intervalpdf(mu=200,sigma=40,p=0.4),type='l',col='red')
 intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
-  if (!missing(mu) && (length(mu) != 1 || mu<=0 || is.na(mu))) stop("'mu' must be a single positive number")
-  if (!missing(sigma) && (length(sigma) != 1 || sigma<=0 || is.na(sigma))) stop("'sigma' must be a single positive number")
-  if (!missing(p) && (length(p) != 1 || !is.finite(p) ||
-                      p < 0 || p > 1)) stop("'p' must be a single number between 0 and 1")
-  if (!missing(fpp) && (length(fpp) != 1 || !is.finite(fpp) ||
-                        fpp < 0 || fpp > 1)) stop("'fpp' must be a single number between 0 and 1")
-  if(!(is.numeric(trunc) & length(trunc) == 2)) stop("'trunc' expected to be a numeric vector of length 2")
-  if(min(data)<trunc[1] | max(data)>trunc[2]) warning("'data' contains values outside truncated range 'trunc'")
-  if(!(N%%1==0 & N>=0)) stop("'N' expected to be an integer larger than 0")
-  if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
+  checkargs(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=fun,trunc=trunc,fpp=fpp)
   if(fun=="normal"){
     funpdf=normi
     funcdf=normpi
@@ -204,29 +233,75 @@ intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5L,fun="gamma",tru
 }
 
 # log-likelihood of an observed interval distribution
-loglik=function(data,mu,sigma,p,N,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) sum(log(probdens(data,mu,sigma,p,N,fun=fun,fpp=fpp,trunc=trunc)))
+loglik=function(data,mu,sigma,p,N=5L,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) sum(log(probdens(data,mu,sigma,p,N,fun=fun,fpp=fpp,trunc=trunc)))
+
 # log-likelihood, with parameters to be optimised in list params
-loglikfn=function(params,data,N,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
-loglikfn2=function(params,data,N,fun=normi,funcdf=normpi,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[4]))))
-loglikfn3=function(params,data,N,fun=normi,funcdf=normpi,fpp=0,p=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],p=p,N=N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
-loglikfn4=function(params,data,N,fun=normi,funcdf=normpi,p=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
+loglikfn1=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,trunc) sum(log(eps+probdens(data,params[1],params[2],p=p,N=N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
+loglikfn2=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,trunc=c(0,Inf)) sum(log(eps+probdens(data,params[1],params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
+loglikfn3=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,trunc=c(0,Inf)) sum(log(eps+probdens(data,params[1],params[2],p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
+loglikfn4=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,trunc=c(0,Inf)) sum(log(eps+probdens(data,params[1],params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[4]))))
 # log-likelihood of a null model without miss chance (i.e. N=1, p=0)
-logliknull=function(params,data,N,fun=normi,funcdf=normpi,fpp=0,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=fpp)))
-logliknull2=function(params,data,N,fun=normi,funcdf=normpi,trunc=c(0,Inf)) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
+logliknull1=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp=0,trunc=c(0,Inf),...) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=fpp)))
+logliknull2=function(params,data,N=5L,fun=gammai,funcdf=gammapi,trunc=c(0,Inf),...) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
+
+# Mixed model versions
+loglikfn1M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[3]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],p=p,N=N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
+loglikfn2M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[4]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
+loglikfn3M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[4]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
+loglikfn4M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[5]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[4]))))
+
+# Two functions per type, for Expectation and Minimization steps in EM-algorithm:
+EstepHelper=function(mu.within,intervals,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,...){
+# lik=length(intervals)*sum(log(eps+fun(mu.within,mu,sqrt(sigma.between^2+sigma^2),0,1))) + loglikfn1(params=c(mu.within,sigma),data=intervals,N=N,fun=fun,funcdf=funcdf,fpp=fpp,p=p,trunc=trunc)
+  lik=loglikfn1(params=c(mu.within+1000*eps,sigma),data=intervals,N=N,fun=fun,funcdf=funcdf,fpp=fpp,p=p,trunc=trunc)
+#  print(paste("EstepHelper:",lik,mu.within,sigma))
+  lik
+}
+Estep=function(intervals,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,groups){
+  data=data.frame(interval=intervals,group=groups)
+  data$random=0
+  data$partiallik=0
+  loglik = 0
+  for(group in unique(groups)) {
+    intervals.group=data[data$group==group,]$interval
+    out=optim(par=mu,EstepHelper,intervals=intervals.group,mu=mu,sigma=sigma,sigma.between=sigma.between,fpp=fpp,p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1),lower=0,upper=100*mu+100*sigma)
+#    print(paste("ESTEPPICKED:",out$value))
+    if(out$convergence!=0) warning("optim() did not converge in function Estep()")
+    data[data$group==group,]$random=out$par
+    data[data$group==group,]$partiallik=out$value
+    if(out$value < -100){
+      print(paste("WARNING!!! this has to do with eps fix ...",100*mu+100*sigma))
+    }
+    loglik=loglik+out$value
+  }
+  optpars=prepare.optim(mu=mu,sigma=sigma,fpp=fpp,p=p,N=N,fun="gamma",trunc=trunc,fpp.method="fixed",p.method="fixed",sigma.between=sigma.between)
+  ### FIXME, above is not stable, because fun argument works only for gamma
+  return(list(random=data$random,partiallik=data$partiallik,loglik=loglik))
+}
+
+Mstep=function(data,random,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.method,p.method){
+  optpars=prepare.optim(mu=mu,sigma=sigma,fpp=fpp,p=p,N=N,fun=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method,sigma.between=sigma.between)
+  # run optimization for model and null model
+  opt=optim(par=optpars$par,optpars$L,data=data,random=random,p=p,fpp=fpp,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,control=list(fnscale=-1))
+  output=prepare.output(opt,fpp,p,fpp.method,p.method,mixed=T)
+  return(output)
+}
+
+
 
 #' log-likelihood of an observed interval distribution
 #'
 #' @param data A numeric list of intervals.
-#' @param mu mean arrival rate.
-#' @param sigma standard deviation of the arrival rate.
+#' @param mu mean arrival interval.
+#' @param sigma standard deviation of the arrival interval.
 #' @param p chance to not observe an arrival.
 #' @param N Maximum number of missed observations to be taken into account (default N=5).
 #' @param fun Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions
 #' @param trunc Use a truncated probability density function with range \code{trunc}
-#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
+#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}
 #' @details
-#' Refer to \link[droprate]{intervalpdf} for details on the functional form of
+#' Refer to \link[intRval]{intervalpdf} for details on the functional form of
 #' the probability density function of an observed interval distribution \eqn{\phi_{obs}}.
 #' The log-likelihood \eqn{L} given a set of intervals {\eqn{x_j}} in \code{data} is given by
 #' \deqn{L(\mu,\sigma,p)=\sum_j \phi_{obs}(x_j | \mu,\sigma,p)}
@@ -240,18 +315,7 @@ logliknull2=function(params,data,N,fun=normi,funcdf=normpi,trunc=c(0,Inf)) sum(l
 #' data(goosedrop)
 #' loglikinterval(goosedrop$interval,mu=200,sigma=50,p=.3)
 loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
-  if (!missing(mu) && (length(mu) != 1 || mu<=0 || is.na(mu))) stop("'mu' must be a single positive number")
-  if (!missing(sigma) && (length(sigma) != 1 || sigma<=0 || is.na(sigma))) stop("'sigma' must be a single positive number")
-  if (!missing(p) && (length(p) != 1 || !is.finite(p) ||
-                      p < 0 || p > 1)) stop("'p' must be a single number between 0 and 1")
-  if (!missing(fpp) && (length(fpp) != 1 || !is.finite(fpp) ||
-                        fpp < 0 || fpp > 1)) stop("'fpp' must be a single number between 0 and 1")
-  if(!(is.numeric(trunc) & length(trunc) == 2)) stop("'trunc' expected to be a numeric vector of length 2")
-  if(!(N%%1==0 & N>=0)) stop("'N' expected to be an integer larger than 0")
-  if(min(data)<0) stop("'data' contains one or more negative intervals, only positive intervals allowed.")
-  if(!(is.numeric(trunc) & length(trunc) == 2)) stop("'trunc' expected to be a numeric vector of length 2")
-  if(min(data)<trunc[1] | max(data)>trunc[2]) warning("'data' contains values outside truncated range 'trunc'")
-  if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
+  checkargs(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=fun,trunc=trunc,fpp=fpp)
   if(fun=="normal"){
     funpdf=normi
     funcdf=normpi
@@ -263,9 +327,9 @@ loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
   loglik(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp)
 }
 
-#' Plot an interval histogram and fit of droprate object
+#' Plot an interval histogram and fit of intRval object
 #'
-#' @param x An droprate class object
+#' @param x An intRval class object
 #' @param binsize Width of the histogram bins
 #' @param line.col Color of the plotted curve for the model fit
 #' @param line.lwd Line width of the plotted curve for the model fit
@@ -280,9 +344,9 @@ loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
 #' dr=estinterval(goosedrop$interval)
 #' plot(dr)
 #' plot(dr,binsize=10,line.col='blue')
-plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', line.lwd=1, ...){
+plot.intRval=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', line.lwd=1, ...){
   object=x
-  stopifnot(inherits(object, "droprate"))
+  stopifnot(inherits(object, "intRval"))
   if(object$distribution=="normal"){
     funpdf=normi
     funcdf=normpi
@@ -296,17 +360,121 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
   curve(plotfunc,0,1500,col=line.col,lwd=line.lwd,add=T)
 }
 
+# helper function to set up a call to optim()
+prepare.optim=function(mu=200,sigma=50,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0,fpp.method="fixed",p.method="auto",sigma.between=NA){
+  fpp.logit=log(fpp/(1-fpp))
+  p.logit=log(p/(1-p))
+  if(fun=="normal"){
+    funpdf=normi
+    funcdf=normpi
+  }
+  else{
+    funpdf=gammai
+    funcdf=gammapi
+  }
+  if(is.na(sigma.between)){
+    # default -- no mixed model
+    if(fpp.method=="fixed" && p.method=="fixed"){
+      par=c(mu,sigma)
+      L=loglikfn1
+      par.null=c(mu,sigma)
+      L.null=logliknull1
+    }
+    if(fpp.method=="fixed" && p.method=="auto"){
+      par=c(mu,sigma,p.logit)
+      L=loglikfn2
+      par.null=c(mu,sigma)
+      L.null=logliknull1
+    }
+    if(fpp.method=="auto" && p.method=="fixed"){
+      par=c(mu,sigma,fpp.logit)
+      L=loglikfn3
+      par.null=c(mu,sigma,fpp.logit)
+      L.null=logliknull2
+    }
+    if(fpp.method=="auto" && p.method=="auto"){
+      par=c(mu,sigma,p.logit,fpp.logit)
+      L=loglikfn4
+      par.null=c(mu,sigma,fpp.logit)
+      L.null=logliknull2
+    }
+  }
+  else{
+    # mixed model case
+    if(fpp.method=="fixed" && p.method=="fixed"){
+      par=c(mu,sigma,sigma.between)
+      L=loglikfn1M
+      par.null=c(mu,sigma)
+      L.null=logliknull1
+    }
+    if(fpp.method=="fixed" && p.method=="auto"){
+      par=c(mu,sigma,p.logit,sigma.between)
+      L=loglikfn2M
+      par.null=c(mu,sigma)
+      L.null=logliknull1
+    }
+    if(fpp.method=="auto" && p.method=="fixed"){
+      par=c(mu,sigma,fpp.logit,sigma.between)
+      L=loglikfn3M
+      par.null=c(mu,sigma,fpp.logit)
+      L.null=logliknull2
+    }
+    if(fpp.method=="auto" && p.method=="auto"){
+      par=c(mu,sigma,p.logit,fpp.logit,sigma.between)
+      L=loglikfn4M
+      par.null=c(mu,sigma,fpp.logit)
+      L.null=logliknull2
+    }
+  }
+
+
+  list(par=par,L=L,par.null=par.null,L.null=L.null,pdf=funpdf,cdf=funcdf,fpp.logit=fpp.logit,p.logit=p.logit)
+}
+
+# prepares optimization-specific output
+prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto",mixed=F){
+  if(fpp.method=="fixed" && p.method=="fixed"){
+    fpp.out=fpp
+    p.out=p
+    # manual adjustment of miss chance treated as optimization, i.e. loss of one df
+    if(p==0) n.opt=2 else n.opt=3
+    if(mixed) sigma.between=opt$par[3]
+  }
+  if(fpp.method=="fixed" && p.method=="auto"){
+    fpp.out=fpp
+    p.out=plogis(opt$par[3])
+    n.opt=3
+    if(mixed) sigma.between=opt$par[4]
+  }
+  if(fpp.method=="auto" && p.method=="fixed"){
+    p.out=p
+    fpp.out=plogis(opt$par[3])
+    # manual adjustment of miss chance treated as optimization, i.e. loss of one df
+    if(p==0) n.opt=3 else n.opt=4
+    if(mixed) sigma.between=opt$par[4]
+  }
+  if(fpp.method=="auto" && p.method=="auto"){
+    p.out=plogis(opt$par[3])
+    fpp.out=plogis(opt$par[4])
+    n.opt=4
+    if(mixed) sigma.between=opt$par[5]
+  }
+  if(!mixed) sigma.between=NA
+  list(mu=opt$par[1],sigma=opt$par[2],loglik=opt$value,p=p.out,fpp=fpp.out,n.opt=n.opt,sigma.between=sigma.between)
+}
+
+
 #' Estimate interval mean and variance accounting for missed arrival observations
 #'
 #' @param data A numeric list of intervals.
-#' @param mu Start value for the numeric optimization for the mean arrival rate.
-#' @param sigma Start value for the numeric optimization for the standard deviation of the arrival rate.
+#' @param mu Start value for the numeric optimization for the mean arrival interval.
+#' @param sigma Start value for the numeric optimization for the standard deviation of the arrival interval.
 #' @param p Start value for the numeric optimization for the probability to miss an observation of an arrival.
 #' @param N Maximum number of missed observations to be taken into account (default N=5).
 #' @param fun Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions
 #' @param trunc Use a truncated probability density function with range \code{trunc}
-#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
+#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}
 #' @param fpp.method A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} is optimized as a free model parameter,
 #' in which case \code{fpp} is taken as start value in the optimisation
 #' @param p.method A string equal to 'fixed' or 'auto'. When 'auto' \code{p} is optimized as a free model parameter,
@@ -315,18 +483,18 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' \code{p} significantly outperforms a model without a miss chance (\code{p=0}).
 #' @param ... Additional arguments to be passed to \link[stats]{optim}
 #' @details
-#' The probability density function for observed intervals \link[droprate]{intervalpdf}
+#' The probability density function for observed intervals \link[intRval]{intervalpdf}
 #' is fit to \code{data} by maximization of the
 #' associated log-likelihood using \link[stats]{optim}.
 #' @export
-#' @return This function returns an object of class \code{droprate}, which is a list containing the following:
+#' @return This function returns an object of class \code{intRval}, which is a list containing the following:
 #' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mean}}{the modelled mean interval}
 #'   \item{\code{stdev}}{the modelled interval standard deviation}
 #'   \item{\code{p}}{the modelled probability to not observe an arrival}
-#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[droprate]{intervalpdf}}
-#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[droprate]{intervalpdf}}
+#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
+#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
 #'   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
 #'   \item{\code{counts}}{counts field of \link[stats]{optim}}
 #'   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
@@ -366,79 +534,120 @@ plot.droprate=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interva
 #' # the apparent statistical significance of the difference of means
 #' t.test(dr3$data,dr4$data)
 #'
-estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="fixed",p.method="auto", conf.level = 0.95, ...){
+#'
+estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="fixed",p.method="auto", conf.level = 0.95, group = NA,...){
+  checkargs(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=fun,trunc=trunc,fpp=fpp,fpp.method=fpp.method,p.method=p.method,conf.level=conf.level)
   call=sys.call()
-  if(!missing(data) && length(data)<=2) stop("no or insufficient data points")
-  if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
-  if (!missing(mu) && (length(mu) != 1 || mu<=0 || is.na(mu))) stop("'mu' must be a single positive number")
-  if (!missing(sigma) && (length(sigma) != 1 || sigma<=0 || is.na(sigma))) stop("'sigma' must be a single positive number")
-  if (!missing(p) && (length(p) != 1 || !is.finite(p) ||
-                               p < 0 || p > 1)) stop("'p' must be a single number between 0 and 1")
-  if (!missing(fpp) && (length(fpp) != 1 || !is.finite(fpp) ||
-                      fpp < 0 || fpp > 1)) stop("'fpp' must be a single number between 0 and 1")
-  if(!(fpp.method=="auto" | fpp.method=="fixed")) stop("'fpp.method' expected to be one of 'fixed' or 'auto'")
-  if(!(p.method=="auto" | p.method=="fixed")) stop("'p.method' expected to be one of 'fixed' or 'auto'")
-  if (!(fun=="normal" || fun=="gamma")) stop("fun needs to be either 'normal' or 'gamma'")
-  if(!(is.numeric(trunc) & length(trunc) == 2)) stop("'trunc' expected to be a numeric vector of length 2")
-  if(min(data)<trunc[1] | max(data)>trunc[2]) warning("'data' contains values outside truncation range 'trunc'")
-  if (!missing(conf.level) && (length(conf.level) != 1 || !is.finite(conf.level) ||
-      conf.level < 0 || conf.level > 1)) stop("'conf.level' must be a single number between 0 and 1")
-  if(fun=="normal"){
-    funpdf=normi
-    funcdf=normpi
+
+  # set up the optimization
+  optpars=prepare.optim(mu=mu,sigma=sigma,p=p,N=N,fun=fun,trunc=trunc,fpp=fpp,fpp.method=fpp.method,p.method=p.method)
+  # run optimization for model and null model
+  opt=optim(par=optpars$par,optpars$L,data=data,p=p,fpp=fpp,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,control=list(fnscale=-1))
+  optnull=optim(par=optpars$par.null,fn=optpars$L.null,data=data,N=1,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
+
+  # mixed model trials
+  improvement=1
+  sigma.between=30
+  counter=0
+  while(counter<20){
+    ResultEstep=Estep(intervals=data,mu=mu,sigma=sigma,sigma.between=sigma.between,fpp=fpp,p=p,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,groups=group)
+#    print(ResultEstep$partiallik)
+    print(paste("E-step: LogLik =",ResultEstep$loglik,"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2)))
+    ResultMstep=Mstep(data=data,random=ResultEstep$random,mu,sigma,sigma.between=sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.method,p.method)
+    p=ResultMstep$p
+    fpp=ResultMstep$fpp
+    mu=ResultMstep$mu
+    sigma=ResultMstep$sigma
+    sigma.between=ResultMstep$sigma.between
+    improvement=ResultEstep$loglik-ResultMstep$loglik
+    counter=counter+1
+    print(paste("M-step:","LogLik =",round(ResultMstep$loglik,1),"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2), "DeltaL =",round(improvement,1)))
   }
-  else{
-    funpdf=gammai
-    funcdf=gammapi
-  }
-  p.logit=log(p/(1-p))
-  if (fpp.method=="auto") fpp.logit=log(fpp/(1-fpp))
-  if(fpp.method=="fixed"){
-    if(p.method=="fixed"){
-      opt=optim(par=c(mu,sigma),loglikfn3,data=data,p=p,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
-      optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
-      fpp.out=fpp
-      p.out=p
-      # manual adjustment of miss chance treated as optimization, i.e. loss of one df
-      if(p==0) n.opt=2 else n.opt=3
-    }
-    else{
-      opt=optim(par=c(mu,sigma,p.logit),loglikfn,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
-      optnull=optim(par=c(mu,sigma),logliknull,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
-      fpp.out=fpp
-      p.out=plogis(opt$par[3])
-      n.opt=3
-    }
-  }
-  else{
-    if(p.method=="fixed"){
-      opt=optim(par=c(mu,sigma,fpp.logit),loglikfn4,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
-      optnull=optim(par=c(mu,sigma,fpp.logit),logliknull2,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
-      p.out=p
-      fpp.out=plogis(opt$par[3])
-      # manual adjustment of miss chance treated as optimization, i.e. loss of one df
-      if(p==0) n.opt=3 else n.opt=4
-    }
-    else{
-      opt=optim(par=c(mu,sigma,p.logit,fpp.logit),loglikfn2,data=data,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
-      optnull=optim(par=c(mu,sigma,fpp.logit),logliknull2,data=data,N=1,fun=funpdf,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1))
-      p.out=plogis(opt$par[3])
-      fpp.out=plogis(opt$par[4])
-      n.opt=4
-    }
-  }
-  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=p.out,fpp=fpp.out,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-n.opt),n.param=n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method)
+  # prepare optimization-specific output
+  out.prep=prepare.output(opt,fpp,p,fpp.method,p.method)
+  # prepare output
+  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=out.prep$p,fpp=out.prep$fpp,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-out.prep$n.opt),n.param=out.prep$n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method)
+
+  # test whether model model outperforms null model
   goodness.fit=pchisq(2*(out$loglik[1]-out$loglik[2]), df=out$df.residual[1], lower.tail=FALSE)
   if(goodness.fit>1-conf.level){
-    warning("model including a miss probability is not significant.\n\nCheck convergence using different starting values (arguments: mu,sigma and p). Consider including a random poisson process background (argument: fpp), or change of interval distribution (argument fun).")
+    warning("no support for a model including a miss probability relative to a model without a miss probability.\n\nCheck convergence using different starting values (arguments: mu,sigma and p).\nConsider including a random poisson process background (argument: fpp),\nor changing the interval distribution (argument: fun).")
   }
-  class(out)="droprate"
+  class(out)="intRval"
   out
+}
+
+#' Simulate a set of observed intervals
+#'
+#' @param n Number of simulated interval observations.
+#' @param mu Mean arrival interval.
+#' @param sigma Standard deviation of the arrival interval.
+#' @param p Probability to miss an observation of an arrival.
+#' @param fun Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
+#' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions
+#' @param trunc Observational range of intervals (intervals outside this range won't be observed)
+#' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}
+#' @param n.ind Number of intervals per group
+#' @param sigma.between The between-group standard-deviation.
+#' @details
+#' Simulates the observations process of arrival intervals.
+#'
+#' The default is to not differentiate between
+#' within- and between-group variance.
+#'
+#' If both \code{n.ind} and \code{sigma.between} have numeric values, intervals are simulated
+#' with both within-group variation (\code{sigma}) and between-group variation (\code{sigma.between}),
+#' for groups of size \code{n.ind}. Intervals belonging to the same group have:
+#' \describe{
+#'  \item{}{a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu} and standard deviation \code{sigma.between}}
+#'  \item{}{a within-group standard deviation in interval length equal to \code{sigma}}
+#' }
+#'
+#' @export
+#' @return This function returns a dataframe containing the following:
+#' \describe{
+#'   \item{\code{interval}}{the simulated interval data}
+#'   \item{\code{group_id}}{a group identifier}
+#' }
+#' @examples
+#' # simulate observed intervals:
+#' intervals=intervalsim(n=50,mu=200,sigma=40,trunc=c(0,600),fpp=0.1)
+#' # check whether we retrieve the simulation parameters:
+#' estinterval(goosedrop$interval)
+intervalsim=function(n=500,mu=200,sigma=40,p=0.3,fun="gamma",trunc=c(0,600),fpp=0,n.ind=NA,sigma.between=NA){
+  checkargs(n=n,mu=mu,sigma=sigma,p=p,fun=fun,trunc=trunc,fpp=fpp)
+  if(fun=="normal") pdfsample = function(x,mu,sigma) rnorm(x,mu,sigma)
+  else pdfsample = function(x,mu,sigma) rgamma(x,shape=mu^2/(sigma^2),scale=(sigma^2)/mu)
+  siminterval = function(mu) {
+    found=F
+    while(!found){
+      ival=pdfsample(1,mu,sigma)
+      if(fpp>runif(1)) ival = rexp(1,1/mu)
+      while(p>runif(1)){
+        if(fpp>runif(1)) ival = ival + rexp(1,1/mu)
+        else ival = ival + pdfsample(1,mu,sigma)
+      }
+      if(ival<trunc[2]) found=T
+    }
+    return(ival)
+  }
+  if (is.na(n.ind)) data = data.frame(interval=replicate(n,siminterval(mu)),group_id=1)
+  else{
+    mu.ind=pdfsample(1,mu,sigma.between)
+    data=data.frame(interval=replicate(n.ind,siminterval(mu.ind)),group_id=rep(1,n.ind))
+    group=1
+    while(group*n.ind<n){
+      mu.ind=pdfsample(1,mu,sigma.between)
+      data=rbind(data,data.frame(interval=replicate(n.ind,siminterval(mu.ind)),group_id=rep(group,n.ind)))
+      group=group+1
+    }
+  }
+  data[1:n,]
 }
 
 #' Conversion of interval estimates to rates
 #'
-#' @param data An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @param data An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param minint the minimum interval value from which numerical integrations converting to rates are started
 #' @param maxint the maximum interval value up to which numerical integrations converting to rates are continued
 #' @param digits the number of digits for printing to screen
@@ -489,7 +698,7 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma
 #' interval2rate(dr)
 interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,digits = max(3L, getOption("digits") - 3L), method="exact"){
   if (!(method=="exact" || method=="taylor")) stop("method needs to be either 'exact' or 'taylor'")
-  stopifnot(inherits(data, "droprate"))
+  stopifnot(inherits(data, "intRval"))
   if(method=="exact"){
     if(data$distribution=="normal"){
       cat(paste("Numerically calculating rate mean and standard deviation\n  truncating normal distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
@@ -528,20 +737,64 @@ interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,d
 }
 
 
+foldHelper=function(x,mu,sigma,p,N=5L,fun=normi,take.sample=F){
+  if(take.sample) fold=sample(1:N,size=1,prob=pdfcomponents(x,mu,sigma,p,N,fun))
+  else fold=which.max(pdfcomponents(x,mu,sigma,p,N,fun))
+  return(mu+(x-fold*mu)/sqrt(fold))
+}
+foldInterval=function(x,mu,sigma,p,N=5L,fun=normi,take.sample=F){
+  if(length(x)>1) return(sapply(x,FUN=foldHelper,mu=mu,sigma=sigma,p=p,N=N,fun=fun,take.sample=take.sample))
+  else return(foldsHelper(x,mu,sigma,p,N,fun,take.sample))
+}
 
-#' summary method for class \code{droprate}
+#' Folds observed arrival intervals with missed observations back to their most probable fundamental interval
+#' @title Folds observed arrival intervals to a fundamental interval
+#' @param object an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param take.sample when \code{TRUE} the fundamental interval is sampled randomly, taking into account the probability weight of each possibility.
+#' When \code{FALSE} the interval is folded to the fundamental with the highest probability weight.
+#' @details
+#' Arrival intervals containing missed observations are folded to the most probable
+#' fundamental interval according to a fit of the distribution of intervals by \link[intRval]{estinterval}.
 #'
-#' @param object An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' There is inherent uncertainty how many missed arrival events an observed interval contains, and therefore to
+#' which fundamental interval it should be folded. The default is to fold intervals to the
+#' fundamental with the highest probability weight. Alternatively, randomly sampled intervals
+#' can be generated, that take into account the probability weights of each possible fold.
+#'
+#' Intervals \code{x} are transformed to their fundamental interval according to
+#' \deqn{\mu+(x-i*\mu)/\sqrt i}{\mu+(x-i*\mu)/\sqrt i}
+#' with \code{i-1} the estimated number of missed observations within the interval, and \eqn{\mu} the
+#' mean arrival rate, estimated by \link[intRval]{estinterval}. This transformation scales appropriately
+#' with the broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
+#'
+#'
+#'
+#' @export
+#' @returna numeric vector with fundamental intervals
+#' @examples
+#' dr=estinterval(goosedrop$interval)
+#' fold(dr)
+fold=function(object, take.sample=F){
+  stopifnot(inherits(object, "intRval"))
+  if(object$distribution=="normal") funpdf=normi
+  else funpdf=gammai
+  foldInterval(object$data,object$mean,object$stdev,object$p,object$N,funpdf)
+}
+
+
+#' summary method for class \code{intRval}
+#'
+#' @param object An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param ... further arguments passed to or from other methods.
 #' @export
-#' @return The function \code{summary.droprate} computes and returns a list of summary statistics
+#' @return The function \code{summary.intRval} computes and returns a list of summary statistics
 #' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mean}}{the modelled mean interval}
 #'   \item{\code{stdev}}{the modelled interval standard deviation}
 #'   \item{\code{p}}{the modelled probability to not observe an arrival}
-#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[droprate]{intervalpdf}}
-#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[droprate]{intervalpdf}}
+#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
+#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
 #'   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
 #'   \item{\code{counts}}{counts field of \link[stats]{optim}}
 #'   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
@@ -559,25 +812,25 @@ interval2rate=function(data,minint=data$mean/100,maxint=data$mean+3*data$stdev,d
 #' data(goosedrop)
 #' dr=estinterval(goosedrop$interval)
 #' summary(dr)
-summary.droprate=function(object, ...){
-  stopifnot(inherits(object, "droprate"))
+summary.intRval=function(object, ...){
+  stopifnot(inherits(object, "intRval"))
   xx=object
   xx$deviance=c(2*(xx$loglik[1]-xx$loglik[2]),abs(2*xx$loglik[1]))
   xx$p.value=c(pchisq(xx$deviance[1], df=xx$df.residual[1], lower.tail=FALSE),pchisq(xx$deviance[2], df=xx$df.residual[2], lower.tail=FALSE))
-  class(xx)="summary.droprate"
+  class(xx)="summary.intRval"
   xx
 }
 
-#' print method for class \code{droprate}
+#' print method for class \code{intRval}
 #'
-#' @param x An object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @param x An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @keywords internal
 #' @export
-print.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ...){
-  stopifnot(inherits(x, "droprate"))
+print.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
+  stopifnot(inherits(x, "intRval"))
   cat("Analysis of arrival interval data with missed arrival observations\n\n")
   cat("          number of intervals: ",format(signif(length(x$data),digits)),"\n\n")
-  cat("            mean arrival rate: ",format(signif(x$mean,digits)),"\n")
+  cat("        mean arrival interval: ",format(signif(x$mean,digits)),"\n")
   cat("           standard deviation: ",format(signif(x$stdev,digits)),"\n")
   cat("              fraction missed: ",format(signif(x$p)),"\n")
   if(x$fpp.method=="auto"){
@@ -585,13 +838,13 @@ print.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ...){
   }
 }
 
-#' print method for class \code{summary.droprate}
+#' print method for class \code{summary.intRval}
 #'
-#' @param x An object of class \code{symmary.droprate}, usually a result of a call to \link[droprate]{summary.droprate}
+#' @param x An object of class \code{symmary.intRval}, usually a result of a call to \link[intRval]{summary.intRval}
 #' @keywords internal
 #' @export
-print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ...){
-  stopifnot(inherits(x, "summary.droprate"))
+print.summary.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
+  stopifnot(inherits(x, "summary.intRval"))
   cat("\nCall: ", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
 
   cat("             mean arrival interval: ",format(signif(x$mean,digits)),"\n")
@@ -608,10 +861,10 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ..
   cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[2],digits)), "(against saturated null model)\n")
 }
 
-#' Performs one and two sample t-tests on objects of class \code{droprate}
-#' @title Student's t-test to compare two means of objects of class \code{droprate}
-#' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
-#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' Performs one and two sample t-tests on objects of class \code{intRval}
+#' @title Student's t-test to compare two means of objects of class \code{intRval}
+#' @param x an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param y an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.
 #' @param mu a number indicating the true value of the mean (or difference in means if you are performing a two sample test).
 #' @param var.equal a logical variable indicating whether to treat the two variances as being equal. If TRUE then the pooled variance is used to estimate the variance otherwise the Welch (or Satterthwaite) approximation to the degrees of freedom is used.
@@ -635,15 +888,15 @@ print.summary.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ..
 ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
           mu = 0, var.equal = FALSE, conf.level = 0.95)
 {
-  stopifnot(inherits(x, "droprate"))
+  stopifnot(inherits(x, "intRval"))
   if (!is.null(y)){
-    stopifnot(inherits(y, "droprate"))
+    stopifnot(inherits(y, "intRval"))
     if(length(x$data)!=length(y$data)){
       samedata=F
     }else{
       samedata=length(which(!(sort(x$data) == sort(y$data))))==0
     }
-    if(samedata) stop("droprate objects estimated on the same dataset")
+    if(samedata) stop("intRval objects estimated on the same dataset")
   }
   alternative <- match.arg(alternative)
   if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
@@ -741,10 +994,10 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
   return(rval)
 }
 
-#' Performs an F test to compare the variances of objects of class \code{droprate}
-#' @title F Test to compare two variances of objects of class \code{droprate}
-#' @param x an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
-#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' Performs an F test to compare the variances of objects of class \code{intRval}
+#' @title F Test to compare two variances of objects of class \code{intRval}
+#' @param x an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param y an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.
 #' @param ratio the hypothesized ratio of the population variances of \code{x} and \code{y}.
 #' @param conf.level confidence level for the returned confidence interval
@@ -766,13 +1019,13 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
 vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
                                            "greater"), conf.level = 0.95)
 {
-  stopifnot(inherits(x, "droprate") && inherits(y, "droprate"))
+  stopifnot(inherits(x, "intRval") && inherits(y, "intRval"))
   if(length(x$data)!=length(y$data)){
     samedata=F
   }else{
     samedata=length(which(!(sort(x$data) == sort(y$data))))==0
   }
-  if(samedata) stop("droprate objects estimated on the same dataset")
+  if(samedata) stop("intRval objects estimated on the same dataset")
   if (!((length(ratio) == 1L) && is.finite(ratio) && (ratio >
                                                       0)))
     stop("'ratio' must be a single positive number")
@@ -817,17 +1070,17 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
   return(RVAL)
 }
 
-#' Compare model fits of \code{droprate} objects estimated on the same data.
+#' Compare model fits of \code{intRval} objects estimated on the same data.
 #' If one object is provided, the results of a deviance test against a model without a miss chance 'p'
 #' is reported. If two objects are provided, the results of a deviance test between the model fits of the two objects is provided.
-#' @title Compares model fits of \code{droprate} objects
-#' @param object an object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
-#' @param y an (optional) object of class \code{droprate}, usually a result of a call to \link[droprate]{estinterval}
+#' @title Compares model fits of \code{intRval} objects
+#' @param object an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param y an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param conf.level confidence level for the deviance test
 #' @param digits the number of digits for printing to screen
 #' @param ... other arguments to be passed to low level functions
 #' @export
-#' @return A list of class "\code{anova.droprate}" with the best model (1 or 2), deviance statistic and test results
+#' @return A list of class "\code{anova.intRval}" with the best model (1 or 2), deviance statistic and test results
 #' \describe{
 #'   \item{\code{best.model}}{the index of the best model (1 is first argument, 2 is second)}
 #'   \item{\code{deviance}}{the deviance between the two tested models}
@@ -840,28 +1093,25 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
 #' }
 #' @examples
 #' data(goosedrop)
-#' model1=estinterval(goosedrop$interval,fun="normal")
-#' model2=estinterval(goosedrop$interval,fun="gamma")
-#' # the model assuming normally distributed intervals outperforms
-#' # the model assuming gamma-distributed intervals:
-#' anova(model1,model2)
-#' # visually inspect model2 fit:
-#' plot(model2)
+#' model1=estinterval(goosedrop$interval,fun="gamma")
+#' # visually inspect model1 fit:
+#' plot(model1)
 #' # The observed distribution has intervals near zero.
-#' # We add a small random baseline to reduce the effect
+#' # We allow a small random baseline to reduce the effect
 #' # of intervals near zero on the fit result.
-#' model3=estinterval(goosedrop$interval,fun="gamma",fpp=.05)
-#' # model3 performs as good as model1:
-#' anova(model1,model3)
-anova.droprate=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOption("digits") - 3L), ...)
+#' model2=estinterval(goosedrop$interval,fun="gamma",fpp.method='auto')
+#' # model2 performs better than model1:
+#' anova(model1,model2)
+anova.intRval=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOption("digits") - 3L), ...)
 {
   x=object
-  stopifnot(inherits(x, "droprate"))
+  stopifnot(inherits(x, "intRval"))
+  if(inherits(y,"intRval") && inherits(conf.level,"intRval")) stop("can compare up to two models only")
   if(!missing(y)){
-    stopifnot(inherits(y, "droprate"))
+    stopifnot(inherits(y, "intRval"))
     samedata=length(which(!(sort(x$data) == sort(y$data))))==0
-    if(!samedata) stop("droprate objects not estimated on the same dataset")
-    if(!(length(which(x$trunc!=y$trunc))==0)) stop("droprate objects do not have the same truncation range 'trunc'")
+    if(!samedata) stop("intRval objects not estimated on the same dataset")
+    if(!(length(which(x$trunc!=y$trunc))==0)) stop("intRval objects do not have the same truncation range 'trunc'")
     deviance=2*(x$loglik[1]-y$loglik[1])
     # CHECK BELOW!
     p.value=pchisq(abs(deviance), df=max(c(1,abs(x$n.param-y$n.param))), lower.tail=FALSE)
@@ -879,18 +1129,18 @@ anova.droprate=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOp
     output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call="model 1 with miss chance p fixed to zero.",
                 AIC=AIC,loglik=x$loglik)
   }
-  attr(output, "class") <- "anova.droprate"
+  attr(output, "class") <- "anova.intRval"
   return(output)
 }
 
-#' print method for class \code{anova.droprate}
+#' print method for class \code{anova.intRval}
 #'
-#' @param x An object of class \code{anova.droprate}, usually a result of a call to \link[droprate]{anova.droprate}
+#' @param x An object of class \code{anova.intRval}, usually a result of a call to \link[intRval]{anova.intRval}
 #' @keywords internal
 #' @export
 
-print.anova.droprate=function(x,digits = max(3L, getOption("digits") - 3L), ...){
-  stopifnot(inherits(x, "anova.droprate"))
+print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
+  stopifnot(inherits(x, "anova.intRval"))
   cat("Model 1 call: ",deparse(x$model1.call),"\n")
   cat("Model 2 call: ",deparse(x$model2.call),"\n\n")
 

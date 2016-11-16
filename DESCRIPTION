@@ -1,4 +1,4 @@
-Package: droprate
+Package: intRval
 Type: Package
 Title: Analysis of interval data with missed arrival observations
 Version: 0.1
