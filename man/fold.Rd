@@ -4,23 +4,32 @@
 \alias{fold}
 \title{Folds observed arrival intervals to a fundamental interval}
 \usage{
-fold(object, take.sample = F)
+fold(object, take.sample = F, stdev.within = NA)
 }
 \arguments{
 \item{object}{an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
 
 \item{take.sample}{when \code{TRUE} the fundamental interval is sampled randomly, taking into account the probability weight of each possibility.
 When \code{FALSE} the interval is folded to the fundamental with the highest probability weight.}
+
+\item{stdev.within}{the assumed within-group/subject standard deviation, e.g. as obtained from \link[intRval]{partition}}
+}
+\value{
+numeric vector with fundamental intervals
 }
 \description{
-Folds observed arrival intervals with missed observations back to their most probable fundamental interval
+Folds observed arrival intervals with missed observations back to their most likely fundamental interval
 }
 \details{
 Arrival intervals containing missed observations are folded to the most probable
 fundamental interval according to a fit of the distribution of intervals by \link[intRval]{estinterval}.
 
 There is inherent uncertainty how many missed arrival events an observed interval contains, and therefore to
-which fundamental interval it should be folded. The default is to fold intervals to the
+which fundamental interval it should be folded. In practice, within- and between-individual variations
+are not properly retrieved from folded intervals, therefore this function has been hidden to prevent users
+from overinterpreting its results.
+
+The default is to fold intervals to the
 fundamental with the highest probability weight. Alternatively, randomly sampled intervals
 can be generated, that take into account the probability weights of each possible fold.
 
@@ -34,4 +43,5 @@ with the broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \s
 dr=estinterval(goosedrop$interval)
 fold(dr)
 }
+\keyword{internal}
 

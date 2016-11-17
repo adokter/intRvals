@@ -31,7 +31,9 @@
 #'
 #' Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
 #'
-#'
+#' @import plyr
+#' @import lme4
+
 "_PACKAGE"
 #> [1] "_PACKAGE"
 
@@ -122,14 +124,9 @@ probdens=function(x,mu,sigma,p,N=5L,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)
   }
 }
 
-# the PDF for mixed model
-probdensM=function(x,mu,sigma,p,N=5L,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)){
-  mapply(probdens,x,mu,MoreArgs=list(sigma=sigma,p=p,N=N,fun=fun,fpp=fpp,funcdf=funcdf,trunc=trunc))
-}
-
 # check of common input arguments
 checkargs = function(data=c(1,2),mu=1,sigma=1,p=0.2,N=5L,n=1L,fun="gamma",trunc=c(0,Inf),fpp=0,fpp.method="fixed",p.method="auto", conf.level = 0.95,sigma.between=NA,n.ind=NA,group=NA){
-  if(class(data) != "numeric") stop("'data' should be numeric vector with intervals")
+  if(!is.numeric(data)) stop("'data' should be numeric vector with intervals")
   if(!missing(data) && length(data)<=2) stop("no or insufficient data points")
   if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
   if(!is.na(sigma.between)){
@@ -244,51 +241,6 @@ loglikfn4=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,trunc=c(0,In
 logliknull1=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp=0,trunc=c(0,Inf),...) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=fpp)))
 logliknull2=function(params,data,N=5L,fun=gammai,funcdf=gammapi,trunc=c(0,Inf),...) sum(log(probdens(data,params[1],params[2],0,N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
 
-# Mixed model versions
-loglikfn1M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[3]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],p=p,N=N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
-loglikfn2M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[4]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,fpp=fpp,trunc=trunc)))
-loglikfn3M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[4]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[3]))))
-loglikfn4M=function(params,data,N=5L,fun=gammai,funcdf=gammapi,fpp,p,random,trunc=c(0,Inf)) sum(log(eps+fun(random,params[1],sqrt(params[2]^2+params[5]^2),0,1))) + sum(log(eps+probdensM(data,random,params[2],plogis(params[3]),N,fun=fun,funcdf=funcdf,trunc=trunc,fpp=plogis(params[4]))))
-
-# Two functions per type, for Expectation and Minimization steps in EM-algorithm:
-EstepHelper=function(mu.within,intervals,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,...){
-# lik=length(intervals)*sum(log(eps+fun(mu.within,mu,sqrt(sigma.between^2+sigma^2),0,1))) + loglikfn1(params=c(mu.within,sigma),data=intervals,N=N,fun=fun,funcdf=funcdf,fpp=fpp,p=p,trunc=trunc)
-  lik=loglikfn1(params=c(mu.within+1000*eps,sigma),data=intervals,N=N,fun=fun,funcdf=funcdf,fpp=fpp,p=p,trunc=trunc)
-#  print(paste("EstepHelper:",lik,mu.within,sigma))
-  lik
-}
-Estep=function(intervals,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,groups){
-  data=data.frame(interval=intervals,group=groups)
-  data$random=0
-  data$partiallik=0
-  loglik = 0
-  for(group in unique(groups)) {
-    intervals.group=data[data$group==group,]$interval
-    out=optim(par=mu,EstepHelper,intervals=intervals.group,mu=mu,sigma=sigma,sigma.between=sigma.between,fpp=fpp,p=p,N=N,fun=fun,funcdf=funcdf,trunc=trunc,control=list(fnscale=-1),lower=0,upper=100*mu+100*sigma)
-#    print(paste("ESTEPPICKED:",out$value))
-    if(out$convergence!=0) warning("optim() did not converge in function Estep()")
-    data[data$group==group,]$random=out$par
-    data[data$group==group,]$partiallik=out$value
-    if(out$value < -100){
-      print(paste("WARNING!!! this has to do with eps fix ...",100*mu+100*sigma))
-    }
-    loglik=loglik+out$value
-  }
-  optpars=prepare.optim(mu=mu,sigma=sigma,fpp=fpp,p=p,N=N,fun="gamma",trunc=trunc,fpp.method="fixed",p.method="fixed",sigma.between=sigma.between)
-  ### FIXME, above is not stable, because fun argument works only for gamma
-  return(list(random=data$random,partiallik=data$partiallik,loglik=loglik))
-}
-
-Mstep=function(data,random,mu,sigma,sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.method,p.method){
-  optpars=prepare.optim(mu=mu,sigma=sigma,fpp=fpp,p=p,N=N,fun=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method,sigma.between=sigma.between)
-  # run optimization for model and null model
-  opt=optim(par=optpars$par,optpars$L,data=data,random=random,p=p,fpp=fpp,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,control=list(fnscale=-1))
-  output=prepare.output(opt,fpp,p,fpp.method,p.method,mixed=T)
-  return(output)
-}
-
-
-
 #' log-likelihood of an observed interval distribution
 #'
 #' @param data A numeric list of intervals.
@@ -361,7 +313,7 @@ plot.intRval=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval
 }
 
 # helper function to set up a call to optim()
-prepare.optim=function(mu=200,sigma=50,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0,fpp.method="fixed",p.method="auto",sigma.between=NA){
+prepare.optim=function(mu=200,sigma=50,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0,fpp.method="fixed",p.method="auto"){
   fpp.logit=log(fpp/(1-fpp))
   p.logit=log(p/(1-p))
   if(fun=="normal"){
@@ -372,95 +324,58 @@ prepare.optim=function(mu=200,sigma=50,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp
     funpdf=gammai
     funcdf=gammapi
   }
-  if(is.na(sigma.between)){
-    # default -- no mixed model
-    if(fpp.method=="fixed" && p.method=="fixed"){
-      par=c(mu,sigma)
-      L=loglikfn1
-      par.null=c(mu,sigma)
-      L.null=logliknull1
-    }
-    if(fpp.method=="fixed" && p.method=="auto"){
-      par=c(mu,sigma,p.logit)
-      L=loglikfn2
-      par.null=c(mu,sigma)
-      L.null=logliknull1
-    }
-    if(fpp.method=="auto" && p.method=="fixed"){
-      par=c(mu,sigma,fpp.logit)
-      L=loglikfn3
-      par.null=c(mu,sigma,fpp.logit)
-      L.null=logliknull2
-    }
-    if(fpp.method=="auto" && p.method=="auto"){
-      par=c(mu,sigma,p.logit,fpp.logit)
-      L=loglikfn4
-      par.null=c(mu,sigma,fpp.logit)
-      L.null=logliknull2
-    }
+  if(fpp.method=="fixed" && p.method=="fixed"){
+    par=c(mu,sigma)
+    L=loglikfn1
+    par.null=c(mu,sigma)
+    L.null=logliknull1
   }
-  else{
-    # mixed model case
-    if(fpp.method=="fixed" && p.method=="fixed"){
-      par=c(mu,sigma,sigma.between)
-      L=loglikfn1M
-      par.null=c(mu,sigma)
-      L.null=logliknull1
-    }
-    if(fpp.method=="fixed" && p.method=="auto"){
-      par=c(mu,sigma,p.logit,sigma.between)
-      L=loglikfn2M
-      par.null=c(mu,sigma)
-      L.null=logliknull1
-    }
-    if(fpp.method=="auto" && p.method=="fixed"){
-      par=c(mu,sigma,fpp.logit,sigma.between)
-      L=loglikfn3M
-      par.null=c(mu,sigma,fpp.logit)
-      L.null=logliknull2
-    }
-    if(fpp.method=="auto" && p.method=="auto"){
-      par=c(mu,sigma,p.logit,fpp.logit,sigma.between)
-      L=loglikfn4M
-      par.null=c(mu,sigma,fpp.logit)
-      L.null=logliknull2
-    }
+  if(fpp.method=="fixed" && p.method=="auto"){
+    par=c(mu,sigma,p.logit)
+    L=loglikfn2
+    par.null=c(mu,sigma)
+    L.null=logliknull1
   }
-
-
+  if(fpp.method=="auto" && p.method=="fixed"){
+    par=c(mu,sigma,fpp.logit)
+    L=loglikfn3
+    par.null=c(mu,sigma,fpp.logit)
+    L.null=logliknull2
+  }
+  if(fpp.method=="auto" && p.method=="auto"){
+    par=c(mu,sigma,p.logit,fpp.logit)
+    L=loglikfn4
+    par.null=c(mu,sigma,fpp.logit)
+    L.null=logliknull2
+  }
   list(par=par,L=L,par.null=par.null,L.null=L.null,pdf=funpdf,cdf=funcdf,fpp.logit=fpp.logit,p.logit=p.logit)
 }
 
 # prepares optimization-specific output
-prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto",mixed=F){
+prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
   if(fpp.method=="fixed" && p.method=="fixed"){
     fpp.out=fpp
     p.out=p
     # manual adjustment of miss chance treated as optimization, i.e. loss of one df
     if(p==0) n.opt=2 else n.opt=3
-    if(mixed) sigma.between=opt$par[3]
   }
   if(fpp.method=="fixed" && p.method=="auto"){
     fpp.out=fpp
     p.out=plogis(opt$par[3])
     n.opt=3
-    if(mixed) sigma.between=opt$par[4]
   }
   if(fpp.method=="auto" && p.method=="fixed"){
     p.out=p
     fpp.out=plogis(opt$par[3])
     # manual adjustment of miss chance treated as optimization, i.e. loss of one df
     if(p==0) n.opt=3 else n.opt=4
-    if(mixed) sigma.between=opt$par[4]
   }
   if(fpp.method=="auto" && p.method=="auto"){
     p.out=plogis(opt$par[3])
     fpp.out=plogis(opt$par[4])
     n.opt=4
-    if(mixed) sigma.between=opt$par[5]
   }
-  if(!mixed) sigma.between=NA
-  list(mu=opt$par[1],sigma=opt$par[2],loglik=opt$value,p=p.out,fpp=fpp.out,n.opt=n.opt,sigma.between=sigma.between)
+  list(mu=opt$par[1],sigma=opt$par[2],loglik=opt$value,p=p.out,fpp=fpp.out,n.opt=n.opt)
 }
 
 
@@ -481,6 +396,7 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto",mixed=F){
 #' in which case \code{p} is taken as start value in the optimisation
 #' @param conf.level Confidence level for deviance test that checks whether model with nonzero miss chance
 #' \code{p} significantly outperforms a model without a miss chance (\code{p=0}).
+#' @param group optional vector of equal length as data, indicating the group or subject in which the interval was observed
 #' @param ... Additional arguments to be passed to \link[stats]{optim}
 #' @details
 #' The probability density function for observed intervals \link[intRval]{intervalpdf}
@@ -545,28 +461,10 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma
   opt=optim(par=optpars$par,optpars$L,data=data,p=p,fpp=fpp,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,control=list(fnscale=-1))
   optnull=optim(par=optpars$par.null,fn=optpars$L.null,data=data,N=1,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,fpp=fpp,control=list(fnscale=-1))
 
-#  # mixed model trials
-#  improvement=1
-#  sigma.between=30
-#  counter=0
-#  while(counter<20){
-#    ResultEstep=Estep(intervals=data,mu=mu,sigma=sigma,sigma.between=sigma.between,fpp=fpp,p=p,N=N,fun=optpars$pdf,funcdf=optpars$cdf,trunc=trunc,groups=group)
-#    print(paste("E-step: LogLik =",ResultEstep$loglik,"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2)))
-#    ResultMstep=Mstep(data=data,random=ResultEstep$random,mu,sigma,sigma.between=sigma.between,fpp,p,N,fun,funcdf,trunc,fpp.method,p.method)
-#    p=ResultMstep$p
-#    fpp=ResultMstep$fpp
-#    mu=ResultMstep$mu
-#    sigma=ResultMstep$sigma
-#    sigma.between=ResultMstep$sigma.between
-#    improvement=ResultEstep$loglik-ResultMstep$loglik
-#    counter=counter+1
-#    print(paste("M-step:","LogLik =",round(ResultMstep$loglik,1),"(mu,sigma,sigma.between)=",round(mu,2),round(sigma,2),round(sigma.between,2), "DeltaL =",round(improvement,1)))
-#  }
-
   # prepare optimization-specific output
   out.prep=prepare.output(opt,fpp,p,fpp.method,p.method)
   # prepare output
-  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=out.prep$p,fpp=out.prep$fpp,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-out.prep$n.opt),n.param=out.prep$n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method)
+  out=list(call=call,data=data,mean=opt$par[1],stdev=opt$par[2],p=out.prep$p,fpp=out.prep$fpp,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-out.prep$n.opt),n.param=out.prep$n.opt,distribution=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method,group=group)
 
   # test whether model model outperforms null model
   goodness.fit=pchisq(2*(out$loglik[1]-out$loglik[2]), df=out$df.residual[1], lower.tail=FALSE)
@@ -575,6 +473,40 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma
   }
   class(out)="intRval"
   out
+}
+
+fundamentalProb = function(x,mu,sigma,p,fpp,N,fun){
+  # get the probabilities of each component of the PDF
+  probs=(1-fpp)*pdfcomponents(x,mu,sigma,p,N,fun)
+  # get the probability that x is part of fpp component
+  probs.fpp=fpp*pdfcomponents(x,mu,mu,p,N,fun=gammai)
+  probs=c(probs,probs.fpp)
+  # normalize
+  probs=(probs/sum(probs))
+  # return relative probably belonging to fundamental
+  probs[1]
+}
+
+#' Estimate which intervals are fundamental
+#'
+#' Estimates which intervals in a dataset are fundamental intervals, i.e. an
+#' interval not containing a missed arrival observation
+#' @param x object inheriting from class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param conf.level confidence level for identifying intervals as fundamental
+#' @return logical atomic vector of the same length as \code{x$data}
+#' @export
+fundamental = function(x, conf.level=0.9){
+  stopifnot(inherits(x,"intRval"))
+  if(x$distribution=="gamma") fun = gammai
+  else fun = normi
+  output=sapply(x$data,function(ival) fundamentalProb(ival,x$mean,x$stdev,x$p,x$fpp,x$N,fun)>conf.level)
+  output
+}
+
+foldHelper=function(x,mu,sigma,p,N=5L,fun=normi,take.sample=F){
+  if(take.sample) fold=sample(1:N,size=1,prob=pdfcomponents(x,mu,sigma,p,N,fun))
+  else fold=which.max(pdfcomponents(x,mu,sigma,p,N,fun))
+  return(mu+(x-fold*mu)/sqrt(fold))
 }
 
 #' Simulate a set of observed intervals
@@ -622,23 +554,32 @@ intervalsim=function(n=500,mu=200,sigma=40,p=0.3,fun="gamma",trunc=c(0,600),fpp=
     found=F
     while(!found){
       ival=pdfsample(1,mu,sigma)
-      if(fpp>runif(1)) ival = rexp(1,1/mu)
+      if(fpp>runif(1)){
+        ival = rexp(1,1/mu)
+      }
       while(p>runif(1)){
-        if(fpp>runif(1)) ival = ival + rexp(1,1/mu)
-        else ival = ival + pdfsample(1,mu,sigma)
+        if(fpp>runif(1)){
+          ival = ival + rexp(1,1/mu)
+        }
+        else{
+          ival = ival + pdfsample(1,mu,sigma)
+        }
       }
       if(ival<trunc[2]) found=T
     }
     return(ival)
   }
-  if (is.na(n.ind)) data = data.frame(interval=replicate(n,siminterval(mu)),group_id=1)
+  if (is.na(n.ind)){
+    data = data.frame(interval=replicate(n,siminterval(mu)),group_id=1)
+  }
   else{
     mu.ind=pdfsample(1,mu,sigma.between)
     data=data.frame(interval=replicate(n.ind,siminterval(mu.ind)),group_id=rep(1,n.ind))
     group=1
     while(group*n.ind<n){
       mu.ind=pdfsample(1,mu,sigma.between)
-      data=rbind(data,data.frame(interval=replicate(n.ind,siminterval(mu.ind)),group_id=rep(group,n.ind)))
+      repdata=replicate(n.ind,siminterval(mu.ind))
+      data=rbind(data,data.frame(interval=repdata,group_id=rep(group,n.ind)))
       group=group+1
     }
   }
@@ -744,20 +685,27 @@ foldHelper=function(x,mu,sigma,p,N=5L,fun=normi,take.sample=F){
 }
 foldInterval=function(x,mu,sigma,p,N=5L,fun=normi,take.sample=F){
   if(length(x)>1) return(sapply(x,FUN=foldHelper,mu=mu,sigma=sigma,p=p,N=N,fun=fun,take.sample=take.sample))
-  else return(foldsHelper(x,mu,sigma,p,N,fun,take.sample))
+  else return(foldHelper(x,mu,sigma,p,N,fun,take.sample))
 }
 
-#' Folds observed arrival intervals with missed observations back to their most probable fundamental interval
+#' Folds observed arrival intervals with missed observations back to their most likely fundamental interval
 #' @title Folds observed arrival intervals to a fundamental interval
 #' @param object an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param take.sample when \code{TRUE} the fundamental interval is sampled randomly, taking into account the probability weight of each possibility.
 #' When \code{FALSE} the interval is folded to the fundamental with the highest probability weight.
+#' @param stdev.within the assumed within-group/subject standard deviation, e.g. as obtained from \link[intRval]{partition}
+#' @export
+#' @keywords internal
 #' @details
 #' Arrival intervals containing missed observations are folded to the most probable
 #' fundamental interval according to a fit of the distribution of intervals by \link[intRval]{estinterval}.
 #'
 #' There is inherent uncertainty how many missed arrival events an observed interval contains, and therefore to
-#' which fundamental interval it should be folded. The default is to fold intervals to the
+#' which fundamental interval it should be folded. In practice, within- and between-individual variations
+#' are not properly retrieved from folded intervals, therefore this function has been hidden to prevent users
+#' from overinterpreting its results.
+#'
+#' The default is to fold intervals to the
 #' fundamental with the highest probability weight. Alternatively, randomly sampled intervals
 #' can be generated, that take into account the probability weights of each possible fold.
 #'
@@ -767,18 +715,43 @@ foldInterval=function(x,mu,sigma,p,N=5L,fun=normi,take.sample=F){
 #' mean arrival rate, estimated by \link[intRval]{estinterval}. This transformation scales appropriately
 #' with the broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
 #'
-#'
-#'
-#' @export
-#' @returna numeric vector with fundamental intervals
+#' @return numeric vector with fundamental intervals
 #' @examples
 #' dr=estinterval(goosedrop$interval)
 #' fold(dr)
-fold=function(object, take.sample=F){
+fold=function(object, take.sample=F, stdev.within=NA){
   stopifnot(inherits(object, "intRval"))
-  if(object$distribution=="normal") funpdf=normi
-  else funpdf=gammai
-  foldInterval(object$data,object$mean,object$stdev,object$p,object$N,funpdf)
+  if(!is.na(stdev.within)){
+    if(length(object$group)==1 && is.na(object$group)) stop("no groups found in object")
+    if(!(length(object$group)==length(object$data))) stop("'group' and 'data' are of unequal length")
+  }
+  # set up distribution family:
+  if(object$distribution=="normal"){
+    funpdf=normi
+    funcdf=normpi
+  }
+  else{
+    funpdf=gammai
+    funcdf=gammapi
+  }
+  # fold intervals:
+  if(is.na(stdev.within)){
+    # case stdev.within >> sigma.between
+    output=foldInterval(object$data,object$mean,object$stdev,object$p,object$N,funpdf)
+  }
+  else{
+    # case stdev.within same order sigma.between
+    output=c()
+    for(group in unique(object$group)) {
+      intervals.group=object$data[object$group==group]
+      foptim=function(mu) loglik(intervals.group,mu,stdev.within,object$p,object$N,funpdf,funcdf,object$fpp,object$trunc)
+      # find the most likely within-group mean
+      mu=optim(object$mean,foptim,method="Brent",lower=0,upper=object$mean+3*object$stdev,control=list(fnscale=-1))
+      # fold the interval, using the optimized within-group mean
+      output=c(output,foldInterval(intervals.group,mu$par,stdev.within,object$p,object$N,funpdf))
+    }
+  }
+  output
 }
 
 
@@ -1152,4 +1125,45 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
   }
   cat(paste("Model 1:   AIC =",format(signif(x$AIC[1],digits)), "   Loglik =",format(signif(x$loglik[1],digits)),"\n"))
   cat(paste("Model 2:   AIC =",format(signif(x$AIC[2],digits)), "   Loglik =",format(signif(x$loglik[2],digits))))
+}
+
+#' Estimate within-group variation
+#'
+#' Estimate within-group variation in interval length
+#' @export
+#' @param x object inheriting from class \code{intRval}
+#' @param conf.level confidence level passed to function \link[intRval]{fundamental}, used in selecting fundamental intervals
+#' @param alpha significance level for differences within and between groups or subjects
+#' @return A list with results
+#' \describe{
+#'   \item{\code{stdev.within}}{within-group standard deviation in interval length, estimated on fundamental intervals with repeated measures only}
+#'   \item{\code{stdev.total}}{the total standard deviation in interval length, copied from \code{x$stdev}}
+#'   \item{\code{p.within}}{p-value form a likelihood-ratio test indicating whether there is evidence for a random effect of group or subject}
+#'   \item{\code{n.within}}{average number of intervals per group}
+#'   \item{\code{n.total}}{total number of intervals}
+#'   \item{\code{n.repeat}}{number of fundamental intervals with repeated measures, the size of the dataset on which \code{stdev.within} was estimated}
+#'   \item{\code{p<alpha}}{logical. Whether there was significant evidence for a difference in within- and between-group/subject variance}
+#' }
+partition=function(x,conf.level=0.9,alpha=0.05){
+  stopifnot(inherits(x,"intRval"))
+  if(length(x$group)==1 && is.na(x$group)) stop("no groups found in object")
+  if(!(length(x$group)==length(x$data))) stop("'group' and 'data' are of unequal length")
+  #extract intervals in the fundamental
+  index=fundamental(x,conf.level)
+  dat.fund=data.frame(interval=x$data[index],group_id=x$group[index])
+  # calculate group statistics
+  dat.fund=ddply(dat.fund, c("group_id"), transform, offset = scale(interval,scale=F), mean = mean(interval), n = length(interval))
+  cat(paste("intervals in fundamental:",nrow(dat.fund),"of",length(x$data)),"\n")
+  dat.fund=dat.fund[dat.fund$n>1,]
+  cat(paste("  with repeated measures:",nrow(dat.fund),"\n\n"))
+  # test with mixed model term whether within-individual variation is significant
+  lmer0=lm(interval ~ 1,data=dat.fund)
+  lmer1=lmer(interval ~ (1 | group_id),data=dat.fund,REML=F)
+  p.within=anova(lmer1,lmer0)$`Pr(>Chisq)`[2]
+  # mean number of individuals per group
+  n.ind=length(dat.fund$group_id)/length(unique(dat.fund$group_id))
+  sd.within=sd(dat.fund$offset)*sqrt(n.ind/(n.ind-1))
+  accept=p.within<alpha
+  if(!accept) warning("no evidence for a random effect of group or subject")
+  list('p<alpha'=accept,stdev.within=sd.within,stdev.total=x$stdev,p.within=p.within,n.within=n.ind,n.repeat=nrow(dat.fund),n.total=length(x$data))
 }

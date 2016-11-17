@@ -36,6 +36,8 @@ in which case \code{p} is taken as start value in the optimisation}
 \item{conf.level}{Confidence level for deviance test that checks whether model with nonzero miss chance
 \code{p} significantly outperforms a model without a miss chance (\code{p=0}).}
 
+\item{group}{optional vector of equal length as data, indicating the group or subject in which the interval was observed}
+
 \item{...}{Additional arguments to be passed to \link[stats]{optim}}
 }
 \value{

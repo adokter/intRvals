@@ -7,5 +7,6 @@ Author: Adriaan Dokter
 Maintainer: Adriaan Dokter <a.m.dokter@uva.nl>
 Description: Droprate allows you to calculate mean arrival intervals and compare means and variances of groups of interval data while accounting for missed arrival observations.
 License: GNU General Public License
+Imports: plyr,lme4
 LazyData: TRUE
 RoxygenNote: 5.0.1
