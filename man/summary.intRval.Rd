@@ -15,8 +15,8 @@
 The function \code{summary.intRval} computes and returns a list of summary statistics
 \describe{
   \item{\code{data}}{the interval data}
-  \item{\code{mean}}{the modelled mean interval}
-  \item{\code{stdev}}{the modelled interval standard deviation}
+  \item{\code{mu}}{the modelled mean interval}
+  \item{\code{sigma}}{the modelled interval standard deviation}
   \item{\code{p}}{the modelled probability to not observe an arrival}
   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
@@ -27,7 +27,7 @@ The function \code{summary.intRval} computes and returns a list of summary stati
   \item{\code{n.param}}{number of optimized model parameters}
   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
-  \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter}
+  \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter. When 'fixed' the model is fitted with a fixed value set by parameter \code{fpp}}
   \item{\code{deviance}}{deviance between the fitted model and a model without a miss chance (i.e. \code{p}=0)}
   \item{\code{p.value}}{numeric vector with two elements. First element contains the p.value for a
   likelihood ratio (deviance) test between the fitted model and a model without a miss chance (i.e. \code{p}=0).

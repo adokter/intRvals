@@ -7,7 +7,7 @@
 fundamental(x, conf.level = 0.9)
 }
 \arguments{
-\item{x}{object inheriting from class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
+\item{x}{object inheriting from class \code{intRval}, usually a result of a call to \code{\link[intRval]{estinterval}}}
 
 \item{conf.level}{confidence level for identifying intervals as fundamental}
 }

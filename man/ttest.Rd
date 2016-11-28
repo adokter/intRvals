@@ -35,7 +35,7 @@ If the input data are effectively constant (compared to the larger of the two me
 data(goosedrop)
 dr=estinterval(goosedrop$interval)
 # perform a one-sample t-test
-ttest(dr)
+ttest(dr,mu=200)  #> FALSE, true mean not equal to 200
 # two sample t-test
 data.beforeMay=goosedrop[goosedrop$date<as.POSIXct('2013-05-01'),]
 data.afterMay=goosedrop[goosedrop$date>as.POSIXct('2013-05-01'),]

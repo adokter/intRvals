@@ -4,8 +4,8 @@
 \alias{interval2rate}
 \title{Conversion of interval estimates to rates}
 \usage{
-interval2rate(data, minint = data$mean/100, maxint = data$mean + 3 *
-  data$stdev, digits = max(3L, getOption("digits") - 3L), method = "exact")
+interval2rate(data, minint = data$mu/100, maxint = data$mu + 3 * data$sigma,
+  digits = max(3L, getOption("digits") - 3L), method = "exact")
 }
 \arguments{
 \item{data}{An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}

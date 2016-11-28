@@ -5,7 +5,7 @@
 \title{Simulate a set of observed intervals}
 \usage{
 intervalsim(n = 500, mu = 200, sigma = 40, p = 0.3, fun = "gamma",
-  trunc = c(0, 600), fpp = 0, n.ind = NA, sigma.between = NA)
+  trunc = c(0, 600), fpp = 0, n.ind = NA, sigma.within = NA)
 }
 \arguments{
 \item{n}{Number of simulated interval observations.}
@@ -14,7 +14,7 @@ intervalsim(n = 500, mu = 200, sigma = 40, p = 0.3, fun = "gamma",
 
 \item{sigma}{Standard deviation of the arrival interval.}
 
-\item{p}{Probability to miss an observation of an arrival.}
+\item{p}{Probability to not observe an arrival.}
 
 \item{fun}{Assumed distribution for the intervals, one of "\code{normal}" or "\code{gamma}", corresponding
 to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
@@ -25,7 +25,7 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 
 \item{n.ind}{Number of intervals per group}
 
-\item{sigma.between}{The between-group standard-deviation.}
+\item{sigma.within}{The within-group standard-deviation. When a numeric value is given for \code{sigma.within}, \code{sigma} denotes the total (within+between subject) standard deviation}
 }
 \value{
 This function returns a dataframe containing the following:
@@ -43,12 +43,13 @@ Simulates the observations process of arrival intervals.
 The default is to not differentiate between
 within- and between-group variance.
 
-If both \code{n.ind} and \code{sigma.between} have numeric values, intervals are simulated
-with both within-group variation (\code{sigma}) and between-group variation (\code{sigma.between}),
+If both \code{n.ind} and \code{sigma.within} have numeric values, intervals are simulated
+with separate within-group variation (\code{sigma.within}) and between-group variation,
 for groups of size \code{n.ind}. Intervals belonging to the same group have:
 \describe{
- \item{}{a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu} and standard deviation \code{sigma.between}}
- \item{}{a within-group standard deviation in interval length equal to \code{sigma}}
+ \item{}{a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu}
+ and between-group standard deviation \eqn{\sqrt}(\code{sigma}\eqn{^2} - \code{sigma.within}\eqn{^2})}
+ \item{}{a within-group standard deviation in interval length equal to \code{sigma.within}}
 }
 }
 \examples{

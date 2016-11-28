@@ -4,7 +4,7 @@
 \alias{partition}
 \title{Estimate within-group variation}
 \usage{
-partition(x, conf.level = 0.9, alpha = 0.05)
+partition(x, conf.level = 0.9, alpha = 0.05, silent = F)
 }
 \arguments{
 \item{x}{object inheriting from class \code{intRval}}
@@ -12,16 +12,18 @@ partition(x, conf.level = 0.9, alpha = 0.05)
 \item{conf.level}{confidence level passed to function \link[intRval]{fundamental}, used in selecting fundamental intervals}
 
 \item{alpha}{significance level for differences within and between groups or subjects}
+
+\item{silent}{logical, if \code{TRUE} print no text to console}
 }
 \value{
 A list with results
 \describe{
-  \item{\code{stdev.within}}{within-group standard deviation in interval length, estimated on fundamental intervals with repeated measures only}
-  \item{\code{stdev.total}}{the total standard deviation in interval length, copied from \code{x$stdev}}
+  \item{\code{sigma.within}}{within-group standard deviation in interval length, estimated on fundamental intervals with repeated measures only}
+  \item{\code{sigma}}{the total standard deviation in interval length, copied from \code{x$sigma}}
   \item{\code{p.within}}{p-value form a likelihood-ratio test indicating whether there is evidence for a random effect of group or subject}
   \item{\code{n.within}}{average number of intervals per group}
   \item{\code{n.total}}{total number of intervals}
-  \item{\code{n.repeat}}{number of fundamental intervals with repeated measures, the size of the dataset on which \code{stdev.within} was estimated}
+  \item{\code{n.repeat}}{number of fundamental intervals with repeated measures, the size of the dataset on which \code{sigma.within} was estimated}
   \item{\code{p<alpha}}{logical. Whether there was significant evidence for a difference in within- and between-group/subject variance}
 }
 }
