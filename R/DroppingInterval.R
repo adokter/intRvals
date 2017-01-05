@@ -196,7 +196,7 @@ checkargs = function(data=c(1,2),mu=1,sigma=1,p=0.2,N=5L,n=1L,fun="gamma",trunc=
 #' to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.
 #' @param trunc Use a truncated probability density function with range \code{trunc}
 #' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}
-#' @param sigma.between within-subject standard deviation, only available when \code{fun} is "normal"
+#' @param sigma.within within-subject standard deviation, only available when \code{fun} is "normal"
 #' @export
 #' @return This function returns a list of points describing the interval distribution
 #' @details
@@ -482,7 +482,8 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' @param sigma.within optional within-subject standard deviation. When equal to default 'NA', assumes
 #' no within-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
 #' an estimate is provided by iteratively calling \link[intRval]{partition}
-#' @param iter maximum number of iterations
+#' @param iter maximum number of iterations in numerical iteration for \code{sigma.within}
+#' @param tol tolerance in the interation, when \code{sigma.within} changes less than this value, the optimization is converged.
 #' @param silent logical. When \code{TRUE} print no information to console
 #' @param ... Additional arguments to be passed to \link[stats]{optim}
 #' @details
@@ -528,7 +529,7 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' # not accounting for missed observations leads to a (spurious)
 #' # larger difference in means, which also increases
 #' # the apparent statistical significance of the difference of means
-#' t.test(dr3$data,dr4$data)
+#' t.test(dr1$data,dr2$data)
 #'
 #'
 estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="auto",p.method="auto", conf.level = 0.95, group = NA, sigma.within=NA, iter=10, tol=0.001,silent=F, ...){
@@ -836,7 +837,7 @@ foldInterval=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
 #' by fitting the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
 #' its \code{sigma} argument equal to \code{sigma.between}, and its remaining arguments taken from \code{object}.
 #'
-#' Intervals assigned to the \code{fpp} component (see \link[bioRad]{estinterval}) are not
+#' Intervals assigned to the \code{fpp} component (see \link[intRval]{estinterval}) are not
 #' folded, and return as \code{NA} values.
 #'
 #' @return numeric vector with fundamental intervals

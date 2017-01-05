@@ -43,7 +43,7 @@ When \code{sigma.within} is a numeric value or '\code{auto}', a mean \eqn{\mu} i
 by fitting the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
 its \code{sigma} argument equal to \code{sigma.between}, and its remaining arguments taken from \code{object}.
 
-Intervals assigned to the \code{fpp} component (see \link[bioRad]{estinterval}) are not
+Intervals assigned to the \code{fpp} component (see \link[intRval]{estinterval}) are not
 folded, and return as \code{NA} values.
 }
 \examples{

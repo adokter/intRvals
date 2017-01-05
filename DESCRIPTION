@@ -1,7 +1,7 @@
 Package: intRval
 Type: Package
 Title: Analysis of interval data with missed arrival observations
-Version: 0.1
+Version: 0.1.1
 Date: 2017-01-05
 Author: Adriaan Dokter
 Maintainer: Adriaan Dokter <a.m.dokter@uva.nl>
