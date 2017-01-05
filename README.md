@@ -40,5 +40,5 @@ The package comes with a example interval dataset `goosedrop`
 
 ###References
 * Dokter, A.M., et al. 2017. Statistical analysis of event data with missed observations: application in estimation of defaecation rate, submitted.
-* B\'{e}dard, J. & Gauthier, G. 1986. Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
+* Bédard, J. & Gauthier, G. 1986. Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
 * Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
