@@ -33,7 +33,7 @@ A list of class "\code{anova.intRval}" with the best model (1 or 2), deviance st
 }
 \description{
 Compare model fits of \code{intRval} objects estimated on the same data.
-If one object is provided, the results of a deviance test against a model without a miss chance 'p'
+If one object is provided, the results of a deviance test against a model without a missed event probability 'p'
 is reported. If two objects are provided, the results of a deviance test between the model fits of the two objects is provided.
 }
 \examples{

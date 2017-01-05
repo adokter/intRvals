@@ -5,7 +5,8 @@
 \title{Probability density function of an observed interval distribution}
 \usage{
 intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
-  N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = 0)
+  N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = 0,
+  sigma.within = NA)
 }
 \arguments{
 \item{data}{A list of intervals for which to calculate the probability density}
@@ -19,15 +20,17 @@ intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
 \item{N}{The maximum number of consecutive missed arrivals to take into consideration}
 
 \item{fun}{assumed distribution family of the true interval distribution, one of
- "\code{normal}" or "\code{gamma}", corresponding
+"\code{normal}" or "\code{gamma}", corresponding
 to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.}
 
 \item{trunc}{Use a truncated probability density function with range \code{trunc}}
 
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
+
+\item{sigma.between}{within-subject standard deviation, only available when \code{fun} is "normal"}
 }
 \value{
-This function returns a list with data, corresponding to the model fit
+This function returns a list of points describing the interval distribution
 }
 \description{
 Observed intervals are assumed to be sampled through observation of continuous
@@ -51,9 +54,10 @@ The width of standard distribution i will be broadened relative to the fundament
 standard uncertainty propagation in the case of addition. Both in the case
 of normal and gamma-distributed intervals (see next subsections) we may write for the observed
 probability density function, \eqn{\phi_{obs}}:
-\deqn{\phi_{obs}(x | \mu, \sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}{\phi_{obs}(x | \mu,\sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}
+\deqn{\phi_{obs}(x | \mu, \sigma, \sigma_w, p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}{\phi_{obs}(x | \mu,\sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}
 In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 Be default the sum is ran up to N=5.
+
 }
 \subsection{Gamma-distributed intervals}{
 By default intervals x are assumed to follow a Gamma (\link[stats]{GammaDist}) distribution \eqn{Gamma(\mu,\sigma)}~\code{\link[stats]{dgamma}(shape=}\eqn{\mu^2/\sigma^2}\code{, scale=}\eqn{\sigma^2/\mu)}
@@ -62,10 +66,21 @@ with a probability density function \eqn{\phi(x)}:
 which has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
 }
 \subsection{Normal-distributed intervals}{
-intervals x may also be assumed to follow a Normal \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
+intervals x may also be assumed to follow a \link[stats]{Normal} distribution \eqn{N(\mu,\sigma)}~\code{\link[stats]{dnorm}(mean=}\eqn{\mu}\code{,sd=}\eqn{\sigma)},
 with a probability density function \eqn{\phi(x)}:
 \deqn{\phi(x|\mu,\sigma)~N(\mu,\sigma)}{\phi(x|\mu,\sigma)~N(\mu,\sigma)}
-which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}.
+which also has a mean \eqn{\mu} and standard deviation \eqn{\sigma}. Because intervals
+are by definition non-negative, the Normal distribution is always truncated at zero.
+In the limit that \eqn{\mu>\sigma} the gamma distribution tends to the normal distribution.
+}
+\subsection{Within and between-subject variation}{
+To account for witin-subject and between-subject differences in mean interval length we define
+\eqn{\sigma_w} as within-subject standard deviation in interval length,
+and \eqn{\sigma_b} as between-subject standard deviation in interval length,
+with \eqn{\sigma^2 = \sigma^2_b + \sigma^2_w}.
+In the normal limit (\eqn{\mu>\sigma}) the population pdf will be a convolution between \eqn{\phi(x|\mu,\sigma_b)}
+and \eqn{\phi(x|\mu,\sigma_w)} equal to:
+\deqn{\phi_{obs}(x | \mu, \sigma,\sigma_w,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}{\phi_{obs}(x | \mu,\sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt{i {\sigma_w}^2 + \sigma^2})}
 }
 }
 \examples{

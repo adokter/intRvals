@@ -4,15 +4,16 @@
 \alias{fold}
 \title{Folds observed arrival intervals to a fundamental interval}
 \usage{
-fold(object, take.sample = F, stdev.within = NA)
+fold(object, take.sample = F, sigma.within = NA, silent = F)
 }
 \arguments{
 \item{object}{an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
 
-\item{take.sample}{when \code{TRUE} the fundamental interval is sampled randomly, taking into account the probability weight of each possibility.
-When \code{FALSE} the interval is folded to the fundamental with the highest probability weight.}
+\item{take.sample}{when \code{TRUE} the number of folds of the fundamental interval is sampled randomly, taking into account the probability weight of each possibility. When \code{FALSE} the fold with the highest probability weight is taken.}
 
-\item{stdev.within}{the assumed within-group/subject standard deviation, e.g. as obtained from \link[intRval]{partition}}
+\item{sigma.within}{numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRval]{partition}.}
+
+\item{silent}{logical, if \code{TRUE} print no text to console}
 }
 \value{
 numeric vector with fundamental intervals
@@ -21,13 +22,13 @@ numeric vector with fundamental intervals
 Folds observed arrival intervals with missed observations back to their most likely fundamental interval
 }
 \details{
-Arrival intervals containing missed observations are folded to the most probable
+Arrival intervals containing missed observations are folded to their most likely
 fundamental interval according to a fit of the distribution of intervals by \link[intRval]{estinterval}.
 
-There is inherent uncertainty how many missed arrival events an observed interval contains, and therefore to
-which fundamental interval it should be folded. In practice, within- and between-individual variations
-are not properly retrieved from folded intervals, therefore this function has been hidden to prevent users
-from overinterpreting its results.
+There is inherent uncertainty on how many missed arrival events an observed interval contains, and therefore to
+which fundamental interval it should be folded. Intervals folded to the fundamental
+can therefore introduce extra unexplained variance, compared to 'true' fundamental intervals. Within- and between-individual variation
+therefore mixes to some extent in folded intervals.
 
 The default is to fold intervals to the
 fundamental with the highest probability weight. Alternatively, randomly sampled intervals
@@ -35,13 +36,24 @@ can be generated, that take into account the probability weights of each possibl
 
 Intervals \code{x} are transformed to their fundamental interval according to
 \deqn{\mu+(x-i*\mu)/\sqrt i}{\mu+(x-i*\mu)/\sqrt i}
-with \code{i-1} the estimated number of missed observations within the interval, and \eqn{\mu} the
+with \code{i-1} the estimated number of missed observations within the interval. When no \code{sigma.within} is provided, \eqn{\mu} equals the
 mean arrival rate, estimated by \link[intRval]{estinterval}. This transformation scales appropriately
 with the broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
+When \code{sigma.within} is a numeric value or '\code{auto}', a mean \eqn{\mu} is estimated for each group,
+by fitting the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
+its \code{sigma} argument equal to \code{sigma.between}, and its remaining arguments taken from \code{object}.
+
+Intervals assigned to the \code{fpp} component (see \link[bioRad]{estinterval}) are not
+folded, and return as \code{NA} values.
 }
 \examples{
-dr=estinterval(goosedrop$interval)
-fold(dr)
+dr=estinterval(goosedrop$interval,group=goosedrop$bout_id)
+# fold assuming no within-subject variation:
+interval.fundamental=fold(dr)
+# test whether there is evidence for within-subject variation:
+partition(dr)$`p<alpha`   #> TRUE
+# there is evidence, therefore better to fold
+# while accounting for within-subject variation:
+interval.fundamental=fold(dr,sigma.within='auto')
 }
-\keyword{internal}
 

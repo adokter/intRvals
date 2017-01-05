@@ -6,8 +6,9 @@
 \usage{
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
   N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = (if (fpp.method ==
-  "fixed") 0 else 0.1), fpp.method = "fixed", p.method = "auto",
-  conf.level = 0.95, group = NA, ...)
+  "fixed") 0 else 0.1), fpp.method = "auto", p.method = "auto",
+  conf.level = 0.95, group = NA, sigma.within = NA, iter = 10,
+  tol = 0.001, silent = F, ...)
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
@@ -16,7 +17,7 @@ estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
 
 \item{sigma}{Start value for the numeric optimization for the standard deviation of the arrival interval.}
 
-\item{p}{Start value for the numeric optimization for the probability to miss an observation of an arrival.}
+\item{p}{Start value for the numeric optimization for the probability to not observe an arrival.}
 
 \item{N}{Maximum number of missed observations to be taken into account (default N=5).}
 
@@ -33,10 +34,18 @@ in which case \code{fpp} is taken as start value in the optimisation}
 \item{p.method}{A string equal to 'fixed' or 'auto'. When 'auto' \code{p} is optimized as a free model parameter,
 in which case \code{p} is taken as start value in the optimisation}
 
-\item{conf.level}{Confidence level for deviance test that checks whether model with nonzero miss chance
-\code{p} significantly outperforms a model without a miss chance (\code{p=0}).}
+\item{conf.level}{Confidence level for deviance test that checks whether model with nonzero missed event probability
+\code{p} significantly outperforms a model without a missed event probability (\code{p=0}).}
 
 \item{group}{optional vector of equal length as data, indicating the group or subject in which the interval was observed}
+
+\item{sigma.within}{optional within-subject standard deviation. When equal to default 'NA', assumes
+no within-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
+an estimate is provided by iteratively calling \link[intRval]{partition}}
+
+\item{iter}{maximum number of iterations}
+
+\item{silent}{logical. When \code{TRUE} print no information to console}
 
 \item{...}{Additional arguments to be passed to \link[stats]{optim}}
 }
@@ -44,20 +53,21 @@ in which case \code{p} is taken as start value in the optimisation}
 This function returns an object of class \code{intRval}, which is a list containing the following:
 \describe{
   \item{\code{data}}{the interval data}
-  \item{\code{mean}}{the modelled mean interval}
-  \item{\code{stdev}}{the modelled interval standard deviation}
+  \item{\code{mu}}{the modelled mean interval}
+  \item{\code{sigma}}{the modelled interval standard deviation}
   \item{\code{p}}{the modelled probability to not observe an arrival}
   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
   \item{\code{counts}}{counts field of \link[stats]{optim}}
-  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
+  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a missed event probability (i.e. \code{p}=0)}
   \item{\code{df.residual}}{degrees of freedom, a 2-vector (1, number of intervals - \code{n.param})}
   \item{\code{n.param}}{number of optimized model parameters}
+  \item{\code{p.chisq}}{p value for a likelihood-ratio test of a model including a miss probability relative against a model without a miss probability}
   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
   \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{fpp} has been optimized as a free model parameter}
-  \item{\code{p.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{f} has been optimized as a free model parameter}
+  \item{\code{p.method}}{A string equal to 'fixed' or 'auto'. When 'auto' \code{p} has been optimized as a free model parameter}
 }
 }
 \description{
@@ -73,25 +83,17 @@ data(goosedrop)
 dr=estinterval(goosedrop$interval)
 plot(dr)
 summary(dr)
-
 # let's estimate mean and variance of dropping intervals by site
-dr1=estinterval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval)
-dr2=estinterval(goosedrop[goosedrop$site=="terschelling",]$interval)
-# The T test that accounts for missed observations shows that the
-# mean dropping interval are significantly different at the two sites:
-ttest(dr1,dr2)
 # assuming gamma-distributed intervals, analysing period 5 only
 # assuming a fraction of intervals to be distributed randomly (fpp='auto'),
-dr3=estinterval(goosedrop[goosedrop$site=="schiermonnikoog" & goosedrop$period==5,]$interval,
-fpp.method="auto",fun="gamma")
-dr4=estinterval(goosedrop[goosedrop$site=="terschelling" & goosedrop$period==5,]$interval,
-fpp.method="auto",fun="gamma")
+dr1=estinterval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fpp.method='auto')
+dr2=estinterval(goosedrop[goosedrop$site=="terschelling",]$interval,fpp.method='auto')
 # plot the fits:
-plot(dr3,xlim=c(0,1000))
-plot(dr4,xlim=c(0,1000))
+plot(dr1,xlim=c(0,1000))
+plot(dr2,xlim=c(0,1000))
 # mean dropping interval are not significantly different
 # at the two sites (on a 0.95 confidence level):
-ttest(dr3,dr4)
+ttest(dr1,dr2)
 # not accounting for missed observations leads to a (spurious)
 # larger difference in means, which also increases
 # the apparent statistical significance of the difference of means
