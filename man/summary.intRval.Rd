@@ -22,15 +22,15 @@ The function \code{summary.intRval} computes and returns a list of summary stati
   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
   \item{\code{counts}}{counts field of \link[stats]{optim}}
-  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
+  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a missed event probability (i.e. \code{p}=0)}
   \item{\code{df.residual}}{degrees of freedom, a 2-vector (1, number of intervals - \code{n.param})}
   \item{\code{n.param}}{number of optimized model parameters}
   \item{\code{distribution}}{assumed interval distribution, one of 'gamma' or 'normal'}
   \item{\code{trunc}}{interval range over which the interval pdf was truncated and normalized}
   \item{\code{fpp.method}}{A string equal to 'fixed' or 'auto'. When 'auto' fpp has been optimized as a free model parameter. When 'fixed' the model is fitted with a fixed value set by parameter \code{fpp}}
-  \item{\code{deviance}}{deviance between the fitted model and a model without a miss chance (i.e. \code{p}=0)}
+  \item{\code{deviance}}{deviance between the fitted model and a model without a missed event probability (i.e. \code{p}=0)}
   \item{\code{p.value}}{numeric vector with two elements. First element contains the p.value for a
-  likelihood ratio (deviance) test between the fitted model and a model without a miss chance (i.e. \code{p}=0).
+  likelihood ratio (deviance) test between the fitted model and a model without a missed event probability (i.e. \code{p}=0).
   Second element contains the p.value for a likelihood ratio (deviance) test between the fitted model and a saturated null model.}
 }
 }

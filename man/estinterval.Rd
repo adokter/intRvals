@@ -34,8 +34,8 @@ in which case \code{fpp} is taken as start value in the optimisation}
 \item{p.method}{A string equal to 'fixed' or 'auto'. When 'auto' \code{p} is optimized as a free model parameter,
 in which case \code{p} is taken as start value in the optimisation}
 
-\item{conf.level}{Confidence level for deviance test that checks whether model with nonzero miss chance
-\code{p} significantly outperforms a model without a miss chance (\code{p=0}).}
+\item{conf.level}{Confidence level for deviance test that checks whether model with nonzero missed event probability
+\code{p} significantly outperforms a model without a missed event probability (\code{p=0}).}
 
 \item{group}{optional vector of equal length as data, indicating the group or subject in which the interval was observed}
 
@@ -60,7 +60,7 @@ This function returns an object of class \code{intRval}, which is a list contain
   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
   \item{\code{counts}}{counts field of \link[stats]{optim}}
-  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a miss chance (i.e. \code{p}=0)}
+  \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a missed event probability (i.e. \code{p}=0)}
   \item{\code{df.residual}}{degrees of freedom, a 2-vector (1, number of intervals - \code{n.param})}
   \item{\code{n.param}}{number of optimized model parameters}
   \item{\code{p.chisq}}{p value for a likelihood-ratio test of a model including a miss probability relative against a model without a miss probability}
