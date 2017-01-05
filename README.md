@@ -1,16 +1,44 @@
-# intRval
-IntRval calculates means and variances of arrival intervals corrected for missed arrival observations, and compares means and variances of groups of interval data.
-
-The package was designed originally for analysing dropping intervals of grazing geese to estimate their faecal output, but can be used to analyse general interval data where intervals are derived from distinct arrival observations.
-
-Intervals are defined as the time between observed arrival events (e.g. the time between one excreted droppings to the next) The package provides a way of taking into account missed observations (excreted droppings), which lead to occasional observed intervals at integer multiples of the true arrival interval.
-
-When observing intervals of arrival events, observers may fail to observe arrival events (e.g. a dropping excretion in the case of geese). With this package inter-arrival times can be fitted to a distribution that accounts for these missed observations.
-
-The package corrects mean and variance of the rate for the effects of missed observations, and provides simple summary statistics and tests for comparing means and variances (analogous to R's native ``t.test`` and ``var.test`` functions)
+#intRval
+intRval calculates means and variances of arrival intervals (and arrival rates) corrected for missed arrival observations, and compares means and variances of groups of interval data.
 
 ###Installation in R
 ```
 library(devtools)
 install_github("adokter/intRval")
 ```
+
+###General
+The central function of package `intRval` is `estinterval`, which is used to estimate the
+mean arrival interval (and its standard deviation) from interval data with missed arrivals. This is
+achieved by fitting the theoretical probability density `intervalpdf` to the interval data
+
+The package can be used to analyse general interval data where
+intervals are derived from distinct arrival observations.
+For example, the authors have used it to analyze dropping intervals
+of grazing geese for estimating their faecal output.
+
+Intervals are defined as the time between observed arrival events (e.g. the time between one excreted droppings to the next)
+The package provides a way of taking into account missed observations
+(e.g. defecations), which lead to occasional observed intervals at integer multiples of the
+true arrival interval.
+
+###Typical workflow
+* Fit interval model `m` to an interval dataset `d` using `estinterval`, as in `m=estinterval(d)`.
+* Visually inspect model fits using `plot.intRval`, as in `plot(m)`.
+* Use `anova.intRval` to check whether the missed event probability was signficantly different from zero, as in `anova(m)`
+* Also use `anova.intRval` to perform model selection between competing models `m1`,`m2` for the same interval dataset `d`, as in `anova(m1,m2)`
+* Compare means and variances between different interval datasets `d1`,`d2` using `ttest` and `vartest`
+
+###Other useful functionality
+* `fold` provides functionality to fold observed intervals back to their fundamental interval
+* `fundamental` tests which intervals are fundamental, i.e. intervals not containing a missed arrival observation
+* `interval2rate` converts interval estimates to rates
+* `partition` estimates and tests for the presence of within-subject variation
+* `intervalsim` simulates a set of observed intervals
+
+The package comes with a example interval dataset `goosedrop`
+
+###References
+* Dokter, A.M., et al. 2017. Statistical analysis of event data with missed observations: application in estimation of defaecation rate, submitted.
+* B\'{e}dard, J. & Gauthier, G. 1986. Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
+* Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
