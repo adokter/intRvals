@@ -43,7 +43,9 @@ in which case \code{p} is taken as start value in the optimisation}
 no within-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
 an estimate is provided by iteratively calling \link[intRval]{partition}}
 
-\item{iter}{maximum number of iterations}
+\item{iter}{maximum number of iterations in numerical iteration for \code{sigma.within}}
+
+\item{tol}{tolerance in the interation, when \code{sigma.within} changes less than this value, the optimization is converged.}
 
 \item{silent}{logical. When \code{TRUE} print no information to console}
 
@@ -97,7 +99,7 @@ ttest(dr1,dr2)
 # not accounting for missed observations leads to a (spurious)
 # larger difference in means, which also increases
 # the apparent statistical significance of the difference of means
-t.test(dr3$data,dr4$data)
+t.test(dr1$data,dr2$data)
 
 
 }

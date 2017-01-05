@@ -27,7 +27,7 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions.}
 
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival rate \code{mu}}
 
-\item{sigma.between}{within-subject standard deviation, only available when \code{fun} is "normal"}
+\item{sigma.within}{within-subject standard deviation, only available when \code{fun} is "normal"}
 }
 \value{
 This function returns a list of points describing the interval distribution
