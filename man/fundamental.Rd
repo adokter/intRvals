@@ -18,3 +18,7 @@ logical atomic vector of the same length as \code{x$data}
 Estimates which intervals in a dataset are fundamental intervals, i.e. an
 interval not containing a missed arrival observation
 }
+\details{
+This functions determines for each interval \code{x$data} whether is has a probabiliy > \code{conf.level} to be
+a fundamental interval, given the model parameters estimated by \link[intRval]{estinterval} for object \code{x}.
+}

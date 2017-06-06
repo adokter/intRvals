@@ -7,7 +7,7 @@
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
   N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = (if (fpp.method ==
   "fixed") 0 else 0.1), fpp.method = "auto", p.method = "auto",
-  conf.level = 0.95, group = NA, sigma.within = NA, iter = 10,
+  conf.level = 0.9, group = NA, sigma.within = NA, iter = 10,
   tol = 0.001, silent = F, ...)
 }
 \arguments{
@@ -40,12 +40,12 @@ in which case \code{p} is taken as start value in the optimisation}
 \item{group}{optional vector of equal length as data, indicating the group or subject in which the interval was observed}
 
 \item{sigma.within}{optional within-subject standard deviation. When equal to default 'NA', assumes
-no within-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
+no additional between-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
 an estimate is provided by iteratively calling \link[intRval]{partition}}
 
 \item{iter}{maximum number of iterations in numerical iteration for \code{sigma.within}}
 
-\item{tol}{tolerance in the interation, when \code{sigma.within} changes less than this value, the optimization is converged.}
+\item{tol}{tolerance in the iteration, when \code{sigma.within} changes less than this value in one iteration step, the optimization is considered converged.}
 
 \item{silent}{logical. When \code{TRUE} print no information to console}
 
@@ -79,27 +79,41 @@ Estimate interval mean and variance accounting for missed arrival observations
 The probability density function for observed intervals \link[intRval]{intervalpdf}
 is fit to \code{data} by maximization of the
 associated log-likelihood using \link[stats]{optim}.
+
+Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRval]{intervalpdf} on the interval data.
+In the iteration \link[intRval]{partition} is used to determine which intervals that according to the fit are a fundamental interval at a confidence level \code{conf.level}.
+Within- and between-group variation is estimated on the subset of fundamental intervals with repeated measures only.
+As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
+\code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
+and \code{iter} set the threshold for convergence and the maximum number of iterations.
 }
 \examples{
 data(goosedrop)
+# calculate mean and standard deviation of arrival intervals, accounting for missed observations:
 dr=estinterval(goosedrop$interval)
-plot(dr)
+# plot some summary information
 summary(dr)
-# let's estimate mean and variance of dropping intervals by site
-# assuming gamma-distributed intervals, analysing period 5 only
-# assuming a fraction of intervals to be distributed randomly (fpp='auto'),
-dr1=estinterval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fpp.method='auto')
-dr2=estinterval(goosedrop[goosedrop$site=="terschelling",]$interval,fpp.method='auto')
+# plot a histogram of the intervals and fit:
+plot(dr)
+# test whether the mean arrival interval is greater than 200 seconds:
+ttest(dr,mu=200,alternative="greater")
+
+# let's estimate mean and variance of dropping intervals by site (schiermonnikoog vs terschelling) for time period 5
+# first prepare the two datasets:
+set1=goosedrop[goosedrop$site=="schiermonnikoog" & goosedrop$period == 5,]
+set2=goosedrop[goosedrop$site=="terschelling"  & goosedrop$period == 5,]
+# allowing a fraction of intervals to be distributed randomly (fpp='auto')
+dr1=estinterval(set1$interval,fpp.method='auto')
+dr2=estinterval(set2$interval,fpp.method='auto')
 # plot the fits:
 plot(dr1,xlim=c(0,1000))
 plot(dr2,xlim=c(0,1000))
 # mean dropping interval are not significantly different
 # at the two sites (on a 0.95 confidence level):
 ttest(dr1,dr2)
+# now compare this test with a t-test not accounting for unobserved intervals:
+t.test(set1$interval,set2$interval)
 # not accounting for missed observations leads to a (spurious)
 # larger difference in means, which also increases
-# the apparent statistical significance of the difference of means
-t.test(dr1$data,dr2$data)
-
-
+# the apparent statistical significance of the difference between means
 }

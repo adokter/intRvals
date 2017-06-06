@@ -11,12 +11,12 @@ fold(object, take.sample = F, sigma.within = NA, silent = F)
 
 \item{take.sample}{when \code{TRUE} the number of folds of the fundamental interval is sampled randomly, taking into account the probability weight of each possibility. When \code{FALSE} the fold with the highest probability weight is taken.}
 
-\item{sigma.within}{numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRval]{partition}.}
+\item{sigma.within}{(optional) numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRval]{partition}.}
 
 \item{silent}{logical, if \code{TRUE} print no text to console}
 }
 \value{
-numeric vector with fundamental intervals
+numeric vector with intervals folded into the fundamental interval
 }
 \description{
 Folds observed arrival intervals with missed observations back to their most likely fundamental interval
@@ -27,21 +27,25 @@ fundamental interval according to a fit of the distribution of intervals by \lin
 
 There is inherent uncertainty on how many missed arrival events an observed interval contains, and therefore to
 which fundamental interval it should be folded. Intervals folded to the fundamental
-can therefore introduce extra unexplained variance, compared to 'true' fundamental intervals. Within- and between-individual variation
-therefore mixes to some extent in folded intervals.
+can therefore introduce extra unexplained variance.
 
 The default is to fold intervals to the
-fundamental with the highest probability weight. Alternatively, randomly sampled intervals
-can be generated, that take into account the probability weights of each possible fold.
+fundamental with the highest probability weight (\code{take.sample = F}). Alternatively, randomly sampled intervals
+can be generated, that take into account the probability weights of each possible fold (\code{take.sample = T}).
 
 Intervals \code{x} are transformed to their fundamental interval according to
 \deqn{\mu+(x-i*\mu)/\sqrt i}{\mu+(x-i*\mu)/\sqrt i}
-with \code{i-1} the estimated number of missed observations within the interval. When no \code{sigma.within} is provided, \eqn{\mu} equals the
-mean arrival rate, estimated by \link[intRval]{estinterval}. This transformation scales appropriately
-with the broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
-When \code{sigma.within} is a numeric value or '\code{auto}', a mean \eqn{\mu} is estimated for each group,
-by fitting the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
-its \code{sigma} argument equal to \code{sigma.between}, and its remaining arguments taken from \code{object}.
+with \code{i-1} the estimated number of missed observations within the interval. This transformation scales appropriately
+with the expected broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
+
+When no \code{sigma.within} is provided, \eqn{\mu} equals the mean arrival rate, estimated by \link[intRval]{estinterval}.
+
+When \code{sigma.within} is '\code{auto}', \code{sigma.within} is estimated using \link[intRval]{partition}.
+
+When \code{sigma.within} is a user-specified numeric value or '\code{auto}', \eqn{\mu} is estimated for each group (
+as specified in the group argument of \link[intRval]{estinterval}),
+by maximizing the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
+its \code{sigma} argument equal to \code{sigma.within}, and its remaining arguments taken from \code{object}.
 
 Intervals assigned to the \code{fpp} component (see \link[intRval]{estinterval}) are not
 folded, and return as \code{NA} values.
