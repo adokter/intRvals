@@ -97,4 +97,3 @@ plot(intervalpdf(mu=200,sigma=40,p=0.01),type='l',col='red')
 # interval distribution
 plot(intervalpdf(mu=200,sigma=40,p=0.4),type='l',col='red')
 }
-

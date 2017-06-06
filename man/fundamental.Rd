@@ -18,4 +18,3 @@ logical atomic vector of the same length as \code{x$data}
 Estimates which intervals in a dataset are fundamental intervals, i.e. an
 interval not containing a missed arrival observation
 }
-

@@ -45,4 +45,3 @@ applied to this function.
 data(goosedrop)
 loglikinterval(goosedrop$interval,mu=200,sigma=50,p=.3)
 }
-

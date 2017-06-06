@@ -59,4 +59,3 @@ B\'{e}dard, J. & Gauthier, G. 1986. Assessment of faecal output in geese. Journa
 
 Owen, M. 1971. The Selection of Feeding Site by White-Fronted Geese in Winter. Journal of Applied Ecology 8: 905-917.
 }
-

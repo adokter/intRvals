@@ -46,4 +46,3 @@ output$sigma.within
 # at the specified confidence level \\code{alpha}?
 output$`p<alpha`  #> TRUE
 }
-

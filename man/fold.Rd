@@ -56,4 +56,3 @@ partition(dr)$`p<alpha`   #> TRUE
 # while accounting for within-subject variation:
 interval.fundamental=fold(dr,sigma.within='auto')
 }
-

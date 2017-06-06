@@ -40,4 +40,3 @@ dr.afterMay=estinterval(data.afterMay$interval)
 vartest(dr.beforeMay,dr.afterMay)
 
 }
-

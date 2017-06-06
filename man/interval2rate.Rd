@@ -68,4 +68,3 @@ data(goosedrop)
 dr=estinterval(goosedrop$interval)
 interval2rate(dr)
 }
-
