@@ -42,4 +42,3 @@ data(goosedrop)
 dr=estinterval(goosedrop$interval)
 summary(dr)
 }
-

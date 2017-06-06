@@ -27,4 +27,3 @@ The variables are as follows:
 Adriaan Dokter \email{a.m.dokter@uva.nl}
 }
 \keyword{datasets}
-

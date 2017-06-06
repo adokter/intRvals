@@ -9,4 +9,4 @@ Description: Droprate allows you to calculate mean arrival intervals and compare
 License: GNU General Public License
 Imports: plyr,lme4
 LazyData: TRUE
-RoxygenNote: 5.0.1
+RoxygenNote: 6.0.1

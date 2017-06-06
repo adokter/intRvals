@@ -44,4 +44,3 @@ dr.afterMay=estinterval(data.afterMay$interval)
 ttest(dr.beforeMay,dr.afterMay)
 
 }
-

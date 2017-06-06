@@ -14,4 +14,3 @@
 print method for class \code{summary.intRval}
 }
 \keyword{internal}
-

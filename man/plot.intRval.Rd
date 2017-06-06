@@ -37,4 +37,3 @@ dr=estinterval(goosedrop$interval)
 plot(dr)
 plot(dr,binsize=10,line.col='blue')
 }
-

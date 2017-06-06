@@ -16,7 +16,7 @@ partition(x, conf.level = 0.9, alpha = 0.05, silent = F)
 \item{silent}{logical, if \code{TRUE} print no text to console}
 }
 \value{
-A list with results
+A logical atomic vector indicating which intervals are fundamental.
 \describe{
   \item{\code{sigma.within}}{within-group standard deviation in interval length, estimated on fundamental intervals with repeated measures only}
   \item{\code{sigma}}{the total standard deviation in interval length, copied from \code{x$sigma}}
@@ -29,6 +29,9 @@ A list with results
 }
 \description{
 Estimate within-group variation in interval length
+}
+\details{
+Selects the subset of fundamental intervals using \link[intRval]{fundamental}.
 }
 \examples{
 # select the group of intervals observed on Terschelling island
@@ -43,7 +46,6 @@ output=partition(dr)
 output$sigma.within
 # is the model including within-group standard deviation signicant,
 # relative to a null model without separate within-group sd,
-# at the specified confidence level \\code{alpha}?
+# at the specified confidence level alpha?
 output$`p<alpha`  #> TRUE
 }
-

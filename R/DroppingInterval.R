@@ -110,8 +110,11 @@ eps=.Machine$double.xmin
 normi=  function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*dnorm(x,i*mu,sqrt((i-1)*sigma^2+sigmap^2))
 normpi= function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*pnorm(x,i*mu,sqrt((i-1)*sigma^2+sigmap^2))
 # gamma distribution for (i-1) missed arrivals component of the PDF; sigmap not implemented, dummy only
-gammai= function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*dgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/abs(mu))
-gammapi=function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*pgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/abs(mu))
+#gammai= function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*dgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/abs(mu))
+#gammapi=function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*pgamma(x,shape=i*mu^2/(sigma^2),scale=(sigma^2)/abs(mu))
+gammai= function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*dgamma(x,shape=i^2*mu^2/((i-1)*sigma^2+sigmap^2),scale=((i-1)*sigma^2+sigmap^2)/abs(i*mu))
+gammapi=function(x,mu,sigma,p,i,sigmap=sigma) (p^(i-1)-p^i)*pgamma(x,shape=i^2*mu^2/((i-1)*sigma^2+sigmap^2),scale=((i-1)*sigma^2+sigmap^2)/abs(i*mu))
+
 
 # normalized list of all components i of the PDF
 pdfcomponents=function(x,mu,sigma,p,N=5L,fun=normi,sigmap=sigma) sapply(1:N,FUN=fun,x=x,p=p,mu=mu,sigma=sigma,sigmap=sigmap)
@@ -153,7 +156,6 @@ probdens=function(x,mu,sigma,p,N=5L,fun=normi,fpp=0,funcdf=normpi,trunc=c(0,Inf)
 # check of common input arguments
 checkargs = function(data=c(1,2),mu=1,sigma=1,p=0.2,N=5L,n=1L,fun="gamma",trunc=c(0,Inf),fpp=0,fpp.method="fixed",p.method="auto", conf.level = 0.95,sigma.within=NA,n.ind=NA,group=NA){
   if(!is.numeric(data)) stop("'data' should be numeric vector with intervals")
-  if(!missing(data) & length(data)<=2) stop("no or insufficient data points")
   if(min(data)<0) stop("data contains one or more negative intervals, only positive intervals allowed.")
   if(!is.na(sigma.within) & sigma.within!="auto"){
     if(!missing(group) & length(group)!=length(data)) stop("'group' should be a vector of equal length as 'data'")
@@ -267,7 +269,6 @@ intervalpdf=function(data=seq(0,1000),mu=200,sigma=40,p=0.3,N=5L,fun="gamma",tru
     funcdf=gammapi
   }
   if(!is.na(sigma.within)){
-    if(fun!="normal") stop("within-subject standard deviation only defined when fun='normal'")
     sigmap=sigma
     sigma=sigma.within
   }
@@ -324,6 +325,7 @@ logliknull2WB=function(params,data,N=5L,fun=gammai,funcdf=gammapi,trunc=c(0,Inf)
 #' loglikinterval(goosedrop$interval,mu=200,sigma=50,p=.3)
 loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
   checkargs(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=fun,trunc=trunc,fpp=fpp)
+  if(!missing(data) & length(data)<=2) stop("no or insufficient data points")
   if(fun=="normal"){
     funpdf=normi
     funcdf=normpi
@@ -480,16 +482,23 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' \code{p} significantly outperforms a model without a missed event probability (\code{p=0}).
 #' @param group optional vector of equal length as data, indicating the group or subject in which the interval was observed
 #' @param sigma.within optional within-subject standard deviation. When equal to default 'NA', assumes
-#' no within-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
+#' no additional between-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
 #' an estimate is provided by iteratively calling \link[intRval]{partition}
 #' @param iter maximum number of iterations in numerical iteration for \code{sigma.within}
-#' @param tol tolerance in the interation, when \code{sigma.within} changes less than this value, the optimization is converged.
+#' @param tol tolerance in the iteration, when \code{sigma.within} changes less than this value in one iteration step, the optimization is considered converged.
 #' @param silent logical. When \code{TRUE} print no information to console
 #' @param ... Additional arguments to be passed to \link[stats]{optim}
 #' @details
 #' The probability density function for observed intervals \link[intRval]{intervalpdf}
 #' is fit to \code{data} by maximization of the
 #' associated log-likelihood using \link[stats]{optim}.
+#'
+#' Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRval]{intervalpdf} on the interval data.
+#' In the iteration \link[intRval]{partition} is used to determine which intervals that according to the fit are a fundamental interval at a confidence level \code{conf.level}.
+#' Within- and between-group variation is estimated on the subset of fundamental intervals with repeated measures only.
+#' As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
+#' \code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
+#' and \code{iter} set the threshold for convergence and the maximum number of iterations.
 #' @export
 #' @return This function returns an object of class \code{intRval}, which is a list containing the following:
 #' \describe{
@@ -512,44 +521,53 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' }
 #' @examples
 #' data(goosedrop)
+#' # calculate mean and standard deviation of arrival intervals, accounting for missed observations:
 #' dr=estinterval(goosedrop$interval)
-#' plot(dr)
+#' # plot some summary information
 #' summary(dr)
-#' # let's estimate mean and variance of dropping intervals by site
-#' # assuming gamma-distributed intervals, analysing period 5 only
-#' # assuming a fraction of intervals to be distributed randomly (fpp='auto'),
-#' dr1=estinterval(goosedrop[goosedrop$site=="schiermonnikoog",]$interval,fpp.method='auto')
-#' dr2=estinterval(goosedrop[goosedrop$site=="terschelling",]$interval,fpp.method='auto')
+#' # plot a histogram of the intervals and fit:
+#' plot(dr)
+#' # test whether the mean arrival interval is greater than 200 seconds:
+#' ttest(dr,mu=200,alternative="greater")
+#'
+#' # let's estimate mean and variance of dropping intervals by site (schiermonnikoog vs terschelling) for time period 5
+#' # first prepare the two datasets:
+#' set1=goosedrop[goosedrop$site=="schiermonnikoog" & goosedrop$period == 5,]
+#' set2=goosedrop[goosedrop$site=="terschelling"  & goosedrop$period == 5,]
+#' # allowing a fraction of intervals to be distributed randomly (fpp='auto')
+#' dr1=estinterval(set1$interval,fpp.method='auto')
+#' dr2=estinterval(set2$interval,fpp.method='auto')
 #' # plot the fits:
 #' plot(dr1,xlim=c(0,1000))
 #' plot(dr2,xlim=c(0,1000))
 #' # mean dropping interval are not significantly different
 #' # at the two sites (on a 0.95 confidence level):
 #' ttest(dr1,dr2)
+#' # now compare this test with a t-test not accounting for unobserved intervals:
+#' t.test(set1$interval,set2$interval)
 #' # not accounting for missed observations leads to a (spurious)
 #' # larger difference in means, which also increases
-#' # the apparent statistical significance of the difference of means
-#' t.test(dr1$data,dr2$data)
-#'
-#'
-estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="auto",p.method="auto", conf.level = 0.95, group = NA, sigma.within=NA, iter=10, tol=0.001,silent=F, ...){
+#' # the apparent statistical significance of the difference between means
+estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma",trunc=c(0,Inf),fpp=(if(fpp.method=="fixed") 0 else 0.1),fpp.method="auto",p.method="auto", conf.level = 0.9, group = NA, sigma.within=NA, iter=10, tol=0.001,silent=F, ...){
   checkargs(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=fun,trunc=trunc,fpp=fpp,fpp.method=fpp.method,p.method=p.method,conf.level=conf.level,sigma.within=sigma.within)
-  if(!is.na(sigma.within) && fun!="normal") stop("within-subject standard deviation only defined when fun='normal'")
 
   #discard data outside truncation interval
   data=data[which(data>trunc[1] & data<trunc[2])]
   call=sys.call()
 
-  est=estintervalHelper(data,mu,sigma,p,N,fun,trunc,fpp,fpp.method,p.method,conf.level,group,NA,call)
-
-  if(!is.na(sigma.within)){
+  if(is.na(sigma.within) || sigma.within=='auto'){
+    est=estintervalHelper(data,mu,sigma,p,N,fun,trunc,fpp,fpp.method,p.method,conf.level,group,NA,call)
+    est$p.within=NA
+  }
+  if(!is.na(sigma.within) && sigma.within=='auto'){
     iter=0
     found=F
     # initialize sigma.within:
     est$sigma.within=sigma/2
     while(!found && iter<10){
       sigmaw.old=est$sigma.within
-      part=partition(est,silent=silent)
+      part=partition(est,silent=silent,conf.level=conf.level)
+      if(is.na(part$sigma.within)) break;
       sigmaw.new=part$sigma.within
       est=estintervalHelper(data,mu,sigma,p,N,fun,trunc,fpp,fpp.method,p.method,conf.level,group,sigmaw.new,call)
       iter=iter+1
@@ -557,7 +575,14 @@ estinterval=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun="gamma
     }
     if(found) est$p.within=part$p.within else est$p.within=NA
     if(!silent & found) cat("sigma.within converged in",iter,"iterations...\n")
-    if(!silent & !found) cat("no convergence of sigma.within in",iter,"iterations...\n")
+    if(!silent & !found & !is.na(est$p.within)) cat("no convergence of sigma.within in",iter,"iterations...\n")
+    if(!silent & !found & is.na(est$p.within)) cat("no convergence of sigma.within, insufficient fundamental intervals...\n")
+  }
+  if(is.numeric(sigma.within)){
+    est=estintervalHelper(data,mu,sigma,p,N,fun,trunc,fpp,fpp.method,p.method,conf.level,group,sigma.within,call)
+    return(est)
+    part=partition(est,silent=silent,conf.level=conf.level)
+    est$p.within=part$p.within
   }
 
   est
@@ -613,6 +638,8 @@ fundamentalProb = function(x,mu,sigma,p,fpp,N,fun){
 #' @param x object inheriting from class \code{intRval}, usually a result of a call to \code{\link[intRval]{estinterval}}
 #' @param conf.level confidence level for identifying intervals as fundamental
 #' @return logical atomic vector of the same length as \code{x$data}
+#' @details This functions determines for each interval \code{x$data} whether is has a probabiliy > \code{conf.level} to be
+#' a fundamental interval, given the model parameters estimated by \link[intRval]{estinterval} for object \code{x}.
 #' @export
 fundamental = function(x, conf.level=0.9){
   stopifnot(inherits(x,"intRval"))
@@ -812,7 +839,7 @@ foldInterval=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
 #' @title Folds observed arrival intervals to a fundamental interval
 #' @param object an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
 #' @param take.sample when \code{TRUE} the number of folds of the fundamental interval is sampled randomly, taking into account the probability weight of each possibility. When \code{FALSE} the fold with the highest probability weight is taken.
-#' @param sigma.within numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRval]{partition}.
+#' @param sigma.within (optional) numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRval]{partition}.
 #' @param silent logical, if \code{TRUE} print no text to console
 #' @export
 #' @details
@@ -821,26 +848,30 @@ foldInterval=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
 #'
 #' There is inherent uncertainty on how many missed arrival events an observed interval contains, and therefore to
 #' which fundamental interval it should be folded. Intervals folded to the fundamental
-#' can therefore introduce extra unexplained variance, compared to 'true' fundamental intervals. Within- and between-individual variation
-#' therefore mixes to some extent in folded intervals.
+#' can therefore introduce extra unexplained variance.
 #'
 #' The default is to fold intervals to the
-#' fundamental with the highest probability weight. Alternatively, randomly sampled intervals
-#' can be generated, that take into account the probability weights of each possible fold.
+#' fundamental with the highest probability weight (\code{take.sample = F}). Alternatively, randomly sampled intervals
+#' can be generated, that take into account the probability weights of each possible fold (\code{take.sample = T}).
 #'
 #' Intervals \code{x} are transformed to their fundamental interval according to
 #' \deqn{\mu+(x-i*\mu)/\sqrt i}{\mu+(x-i*\mu)/\sqrt i}
-#' with \code{i-1} the estimated number of missed observations within the interval. When no \code{sigma.within} is provided, \eqn{\mu} equals the
-#' mean arrival rate, estimated by \link[intRval]{estinterval}. This transformation scales appropriately
-#' with the broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
-#' When \code{sigma.within} is a numeric value or '\code{auto}', a mean \eqn{\mu} is estimated for each group,
-#' by fitting the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
-#' its \code{sigma} argument equal to \code{sigma.between}, and its remaining arguments taken from \code{object}.
+#' with \code{i-1} the estimated number of missed observations within the interval. This transformation scales appropriately
+#' with the expected broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
+#'
+#' When no \code{sigma.within} is provided, \eqn{\mu} equals the mean arrival rate, estimated by \link[intRval]{estinterval}.
+#'
+#' When \code{sigma.within} is '\code{auto}', \code{sigma.within} is estimated using \link[intRval]{partition}.
+#'
+#' When \code{sigma.within} is a user-specified numeric value or '\code{auto}', \eqn{\mu} is estimated for each group (
+#' as specified in the group argument of \link[intRval]{estinterval}),
+#' by maximizing the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
+#' its \code{sigma} argument equal to \code{sigma.within}, and its remaining arguments taken from \code{object}.
 #'
 #' Intervals assigned to the \code{fpp} component (see \link[intRval]{estinterval}) are not
 #' folded, and return as \code{NA} values.
 #'
-#' @return numeric vector with fundamental intervals
+#' @return numeric vector with intervals folded into the fundamental interval
 #' @examples
 #' dr=estinterval(goosedrop$interval,group=goosedrop$bout_id)
 #' # fold assuming no within-subject variation:
@@ -1270,7 +1301,7 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #' @param conf.level confidence level passed to function \link[intRval]{fundamental}, used in selecting fundamental intervals
 #' @param alpha significance level for differences within and between groups or subjects
 #' @param silent logical, if \code{TRUE} print no text to console
-#' @return A list with results
+#' @return A logical atomic vector indicating which intervals are fundamental.
 #' \describe{
 #'   \item{\code{sigma.within}}{within-group standard deviation in interval length, estimated on fundamental intervals with repeated measures only}
 #'   \item{\code{sigma}}{the total standard deviation in interval length, copied from \code{x$sigma}}
@@ -1280,6 +1311,8 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #'   \item{\code{n.repeat}}{number of fundamental intervals with repeated measures, the size of the dataset on which \code{sigma.within} was estimated}
 #'   \item{\code{p<alpha}}{logical. Whether there was significant evidence for a difference in within- and between-group/subject variance}
 #' }
+#' @details
+#' Selects the subset of fundamental intervals using \link[intRval]{fundamental}.
 #' @examples
 #' # select the group of intervals observed on Terschelling island
 #' dropset=goosedrop[goosedrop$site=="terschelling",]
@@ -1293,16 +1326,19 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #' output$sigma.within
 #' # is the model including within-group standard deviation signicant,
 #' # relative to a null model without separate within-group sd,
-#' # at the specified confidence level \code{alpha}?
+#' # at the specified confidence level alpha?
 #' output$`p<alpha`  #> TRUE
 partition=function(x,conf.level=0.9,alpha=0.05,silent=F){
   stopifnot(inherits(x,"intRval"))
   if(length(x$group)==1 && is.na(x$group)) stop("no groups found in object")
   if(!(length(x$group)==length(x$data))) stop("'group' and 'data' are of unequal length")
   #extract intervals in the fundamental
-  index=fundamental(x,conf.level)
+  index=which(fundamental(x,conf.level))
   #check that we have fundamental intervals
-  if(length(index)<2) return(list('p<alpha'=F,sigma.within=NA,sigma=x$sigma,p.within=NA,n.within=NA,n.repeat=0,n.total=length(x$data)))
+  if(length(index)<2){
+    warning(paste("insufficient fundamental intervals at confidence level alpha =",conf.level))
+    return(list('p<alpha'=F,sigma.within=NA,sigma=x$sigma,p.within=NA,n.within=NA,n.repeat=0,n.total=length(x$data)))
+  }
   dat.fund=data.frame(interval=x$data[index],group_id=x$group[index])
   # calculate group statistics
   dat.fund=ddply(dat.fund, c("group_id"), transform, offset = scale(interval,scale=F), mean = mean(interval), n = length(interval))

@@ -48,4 +48,3 @@ model2=estinterval(goosedrop$interval,fun="gamma",fpp.method='auto')
 # model2 performs better than model1:
 anova(model1,model2)
 }
-
