@@ -530,7 +530,8 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' # test whether the mean arrival interval is greater than 200 seconds:
 #' ttest(dr,mu=200,alternative="greater")
 #'
-#' # let's estimate mean and variance of dropping intervals by site (schiermonnikoog vs terschelling) for time period 5
+#' # let's estimate mean and variance of dropping intervals by site
+#' # (schiermonnikoog vs terschelling) for time period 5.
 #' # first prepare the two datasets:
 #' set1=goosedrop[goosedrop$site=="schiermonnikoog" & goosedrop$period == 5,]
 #' set2=goosedrop[goosedrop$site=="terschelling"  & goosedrop$period == 5,]
