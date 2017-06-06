@@ -20,7 +20,7 @@ The variables are as follows:
   \item{\code{prop_abdomen_seen}}{proportion of total observation time when abdomen could be observed}
   \item{\code{bout_id}}{intervals belonging to the same observation bout of an individual have the same \code{bout_id}}
   \item{\code{site}}{observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)}
-  \item{\code{period}}{observation period}
+  \item{\code{period}}{two-week observation period (1-5)}
 }
 }
 \author{

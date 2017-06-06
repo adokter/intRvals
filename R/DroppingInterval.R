@@ -96,7 +96,7 @@ MidPoints=as.POSIXct(c("2013-3-19", "2013-4-2", "2013-4-15", "2013-4-29", "2013-
 #'   \item{\code{prop_abdomen_seen}}{proportion of total observation time when abdomen could be observed}
 #'   \item{\code{bout_id}}{intervals belonging to the same observation bout of an individual have the same \code{bout_id}}
 #'   \item{\code{site}}{observation site. One of 'terschelling' (agricultural grassland) or 'schiermonnikoog' (salt marsh)}
-#'   \item{\code{period}}{observation period}
+#'   \item{\code{period}}{two-week observation period (1-5)}
 #' }
 #'
 #' @author Adriaan Dokter \email{a.m.dokter@uva.nl}
@@ -826,7 +826,7 @@ interval2rate=function(data,minint=data$mu/100,maxint=data$mu+3*data$sigma,digit
 
 foldHelper=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
   components=c((1-fpp)*pdfcomponents(x,mu,sigma,p,N,fun),fpp*pdfcomponents(x,mu,mu,p,N,fun=gammai))
-  if(take.sample) fold=sample(1:N,size=1,prob=components)
+  if(take.sample) fold=sample(1:(2*N),size=1,prob=components)
   else fold=which.max(components)
   if(fold>N) return(NA) # in this case it's an fpp component
   else return(mu+(x-fold*mu)/sqrt(fold))
@@ -904,7 +904,7 @@ fold=function(object, take.sample=F, sigma.within=NA,silent=F){
   # fold intervals:
   if(is.na(sigma.within)){
     # case sigma.within >> sigma.between
-    output=foldInterval(object$data,object$mu,object$sigma,object$p,object$fpp,object$N,funpdf)
+    output=foldInterval(object$data,object$mu,object$sigma,object$p,object$fpp,object$N,funpdf,take.sample=take.sample)
   }
   else{
     # case sigma.within same order sigma.between
@@ -915,7 +915,7 @@ fold=function(object, take.sample=F, sigma.within=NA,silent=F){
       # find the most likely within-group mean
       mu=optim(object$mu,foptim,method="Brent",lower=max(c(0,object$mu-3*abs(object$sigma))),upper=object$mu+3*abs(object$sigma),control=list(fnscale=-1))
       # fold the interval, using the optimized within-group mean
-      output=c(output,foldInterval(intervals.group,mu$par,sigma.within,object$p,object$fpp,object$N,funpdf))
+      output=c(output,foldInterval(intervals.group,mu$par,sigma.within,object$p,object$fpp,object$N,funpdf,take.sample=take.sample))
     }
   }
   output
