@@ -52,11 +52,11 @@ folded, and return as \code{NA} values.
 }
 \examples{
 dr=estinterval(goosedrop$interval,group=goosedrop$bout_id)
-# fold assuming no within-subject variation:
+# fold assuming no within-group variation:
 interval.fundamental=fold(dr)
-# test whether there is evidence for within-subject variation:
+# test whether there is evidence for within-group variation:
 partition(dr)$`p<alpha`   #> TRUE
 # there is evidence, therefore better to fold
-# while accounting for within-subject variation:
+# while accounting for within-group variation:
 interval.fundamental=fold(dr,sigma.within='auto')
 }

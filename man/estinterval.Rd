@@ -2,7 +2,7 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{estinterval}
 \alias{estinterval}
-\title{Estimate interval mean and variance accounting for missed arrival observations}
+\title{Estimate interval model accounting for missed arrival observations}
 \usage{
 estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
   N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = (if (fpp.method ==
@@ -73,7 +73,8 @@ This function returns an object of class \code{intRval}, which is a list contain
 }
 }
 \description{
-Estimate interval mean and variance accounting for missed arrival observations
+Estimate interval mean and variance accounting for missed arrival observations,
+by fitting the probability density function \link[intRval]{intervalpdf} to the interval data.
 }
 \details{
 The probability density function for observed intervals \link[intRval]{intervalpdf}
@@ -81,7 +82,9 @@ is fit to \code{data} by maximization of the
 associated log-likelihood using \link[stats]{optim}.
 
 Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRval]{intervalpdf} on the interval data.
-In the iteration \link[intRval]{partition} is used to determine which intervals that according to the fit are a fundamental interval at a confidence level \code{conf.level}.
+In the iteration \link[intRval]{partition} is used to (1) determine which intervals according to the fit are a fundamental interval at a confidence level \code{conf.level},
+and (2) to partition the within-group variation from the total variation in interval length.
+
 Within- and between-group variation is estimated on the subset of fundamental intervals with repeated measures only.
 As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
 \code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}

@@ -23,7 +23,7 @@ to the \link[stats]{Normal} and \link[stats]{GammaDist} distributions}
 
 \item{fpp}{Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}}
 
-\item{n.ind}{Number of intervals per group}
+\item{n.ind}{Number of intervals per group. Ignored without a numeric value for \code{sigma.within}.}
 
 \item{sigma.within}{The within-group standard-deviation. When a numeric value is given for \code{sigma.within}, \code{sigma} denotes the total (within+between subject) standard deviation}
 }

@@ -54,7 +54,9 @@ The width of standard distribution i will be broadened relative to the fundament
 standard uncertainty propagation in the case of addition. Both in the case
 of normal and gamma-distributed intervals (see next subsections) we may write for the observed
 probability density function, \eqn{\phi_{obs}}:
-\deqn{\phi_{obs}(x | \mu, \sigma, \sigma_w, p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}{\phi_{obs}(x | \mu,\sigma,p)=\sum_{i=1}^\infty P(i-1) \phi(x | i \mu,\sqrt i \sigma)}
+\deqn{\phi_{obs}(x | \mu, \sigma, p)=\sum_{i=1}^\infty \phi_{obs}(x,i | \mu,\sigma,p)}{\phi_{obs}(x | \mu, \sigma, p)=\sum_{i=1}^\infty \phi_{obs}(x,i | \mu,\sigma,p)}
+with
+\deqn{\phi_{obs}(x,i | \mu, \sigma, p)= P(i-1) \phi(x | i \mu,\sqrt i \sigma)}{\phi_{obs}(x,i | \mu, \sigma, p)= P(i-1) \phi(x | i \mu,\sqrt i \sigma)}
 In practice, this probability density function is well approximate when the infinite sum is capped at a finite integer N.
 Be default the sum is ran up to N=5.
 
