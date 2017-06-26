@@ -1,14 +1,14 @@
-#intRval
-intRval calculates means and variances of arrival intervals (and arrival rates) corrected for missed arrival observations, and compares means and variances of groups of interval data.
+#intRvals
+intRvals calculates means and variances of arrival intervals (and arrival rates) corrected for missed arrival observations, and compares means and variances of groups of interval data.
 
 ###Installation in R
 ```
 library(devtools)
-install_github("adokter/intRval")
+install_github("adokter/intRvals")
 ```
 
 ###General
-The central function of package `intRval` is `estinterval`, which is used to estimate the
+The central function of package `intRvals` is `estinterval`, which is used to estimate the
 mean arrival interval (and its standard deviation) from interval data with missed arrivals. This is
 achieved by fitting the theoretical probability density `intervalpdf` to the interval data
 
@@ -24,9 +24,9 @@ true arrival interval.
 
 ###Typical workflow
 * Fit interval model `m` to an interval dataset `d` using `estinterval`, as in `m=estinterval(d)`.
-* Visually inspect model fits using `plot.intRval`, as in `plot(m)`.
-* Use `anova.intRval` to check whether the missed event probability was signficantly different from zero, as in `anova(m)`
-* Also use `anova.intRval` to perform model selection between competing models `m1`,`m2` for the same interval dataset `d`, as in `anova(m1,m2)`
+* Visually inspect model fits using `plot.intRvals`, as in `plot(m)`.
+* Use `anova.intRvals` to check whether the missed event probability was signficantly different from zero, as in `anova(m)`
+* Also use `anova.intRvals` to perform model selection between competing models `m1`,`m2` for the same interval dataset `d`, as in `anova(m1,m2)`
 * Compare means and variances between different interval datasets `d1`,`d2` using `ttest` and `vartest`
 
 ###Other useful functionality
