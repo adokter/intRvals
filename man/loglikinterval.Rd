@@ -32,7 +32,7 @@ returns the value of the loglikelihood
 log-likelihood of an observed interval distribution
 }
 \details{
-Refer to \link[intRval]{intervalpdf} for details on the functional form of
+Refer to \link[intRvals]{intervalpdf} for details on the functional form of
 the probability density function of an observed interval distribution \eqn{\phi_{obs}}.
 The log-likelihood \eqn{L} given a set of intervals {\eqn{x_j}} in \code{data} is given by
 \deqn{L(\mu,\sigma,p)=\log \sum_j \phi_{obs}(x_j | \mu,\sigma,p)}

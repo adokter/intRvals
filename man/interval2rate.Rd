@@ -8,7 +8,7 @@ interval2rate(data, minint = data$mu/100, maxint = data$mu + 3 * data$sigma,
   digits = max(3L, getOption("digits") - 3L), method = "exact")
 }
 \arguments{
-\item{data}{An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
+\item{data}{An object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}}
 
 \item{minint}{the minimum interval value from which numerical integrations converting to rates are started}
 

@@ -7,9 +7,9 @@
 partition(x, conf.level = 0.9, alpha = 0.05, silent = F)
 }
 \arguments{
-\item{x}{object inheriting from class \code{intRval}}
+\item{x}{object inheriting from class \code{intRvals}}
 
-\item{conf.level}{confidence level passed to function \link[intRval]{fundamental}, used in selecting fundamental intervals}
+\item{conf.level}{confidence level passed to function \link[intRvals]{fundamental}, used in selecting fundamental intervals}
 
 \item{alpha}{significance level for differences within and between groups or subjects}
 
@@ -33,7 +33,7 @@ Estimate within-group variation in interval length
 \details{
 Within- and between-group variation is estimated on the subset of fundamental intervals only.
 
-The subset of fundamental intervals is selected using \link[intRval]{fundamental}.
+The subset of fundamental intervals is selected using \link[intRvals]{fundamental}.
 
 We calculate \eqn{sigma.within = s_w n_{ind}/(n_{ind}+1)} with \eqn{s_w} the uncorrected sample standard deviation
 of within-group centered values (obtained from subtracting the group's mean value from each observation value),

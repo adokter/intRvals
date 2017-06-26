@@ -2,15 +2,15 @@
 % Please edit documentation in R/DroppingInterval.R
 \name{vartest}
 \alias{vartest}
-\title{F Test to compare two variances of objects of class \code{intRval}}
+\title{F Test to compare two variances of objects of class \code{intRvals}}
 \usage{
 vartest(x, y, ratio = 1, alternative = c("two.sided", "less", "greater"),
   conf.level = 0.95)
 }
 \arguments{
-\item{x}{an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
+\item{x}{an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}}
 
-\item{y}{an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}}
+\item{y}{an (optional) object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}}
 
 \item{ratio}{the hypothesized ratio of the population variances of \code{x} and \code{y}.}
 
@@ -22,7 +22,7 @@ vartest(x, y, ratio = 1, alternative = c("two.sided", "less", "greater"),
 A list with class "\code{htest}" containing the same components as in \link[stats]{var.test}
 }
 \description{
-Performs an F test to compare the variances of objects of class \code{intRval}
+Performs an F test to compare the variances of objects of class \code{intRvals}
 }
 \details{
 The null hypothesis is that the ratio of the variances of the

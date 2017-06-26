@@ -1,11 +1,11 @@
-Package: intRval
+Package: intRvals
 Type: Package
-Title: Analysis of time-ordered event data with missed observations
+Title: Analysis of Time-Ordered Event Data with Missed Observations
 Version: 1.0.0
 Date: 2017-06-26
 Author: Adriaan M. Dokter
 Maintainer: Adriaan M. Dokter <a.m.dokter@uva.nl>
-Description: intRval calculates event rates and compares means and variances of groups of interval data corrected for missed arrival observations.
+Description: package IntRvals calculates event rates and compares means and variances of groups of interval data corrected for missed arrival observations.
 License: GNU General Public License
 Imports: plyr,lme4
 LazyData: TRUE

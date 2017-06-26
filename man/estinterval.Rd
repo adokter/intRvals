@@ -41,7 +41,7 @@ in which case \code{p} is taken as start value in the optimisation}
 
 \item{sigma.within}{optional within-subject standard deviation. When equal to default 'NA', assumes
 no additional between-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
-an estimate is provided by iteratively calling \link[intRval]{partition}}
+an estimate is provided by iteratively calling \link[intRvals]{partition}}
 
 \item{iter}{maximum number of iterations in numerical iteration for \code{sigma.within}}
 
@@ -52,15 +52,15 @@ an estimate is provided by iteratively calling \link[intRval]{partition}}
 \item{...}{Additional arguments to be passed to \link[stats]{optim}}
 }
 \value{
-This function returns an object of class \code{intRval}, which is a list containing the following:
+This function returns an object of class \code{intRvals}, which is a list containing the following:
 \describe{
   \item{\code{data}}{the interval data}
   \item{\code{mu}}{the modelled mean interval}
   \item{\code{mu.se}}{the modelled mean interval standard error}
   \item{\code{sigma}}{the modelled interval standard deviation}
   \item{\code{p}}{the modelled probability to not observe an arrival}
-  \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
-  \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
+  \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRvals]{intervalpdf}}
+  \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRvals]{intervalpdf}}
   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
   \item{\code{counts}}{counts field of \link[stats]{optim}}
   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a missed event probability (i.e. \code{p}=0)}
@@ -75,20 +75,20 @@ This function returns an object of class \code{intRval}, which is a list contain
 }
 \description{
 Estimate interval mean and variance accounting for missed arrival observations,
-by fitting the probability density function \link[intRval]{intervalpdf} to the interval data.
+by fitting the probability density function \link[intRvals]{intervalpdf} to the interval data.
 }
 \details{
-The probability density function for observed intervals \link[intRval]{intervalpdf}
+The probability density function for observed intervals \link[intRvals]{intervalpdf}
 is fit to \code{data} by maximization of the
 associated log-likelihood using \link[stats]{optim}.
 
-Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRval]{intervalpdf} on the interval data.
-In the iteration \link[intRval]{partition} is used to (1) determine which intervals according to the fit are a fundamental interval at a confidence level \code{conf.level},
+Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRvals]{intervalpdf} on the interval data.
+In the iteration \link[intRvals]{partition} is used to (1) determine which intervals according to the fit are a fundamental interval at a confidence level \code{conf.level},
 and (2) to partition the within-group variation from the total variation in interval length.
 
 Within- and between-group variation is estimated on the subset of fundamental intervals with repeated measures only.
-As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
-\code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
+As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRvals]{intervalpdf} and the subsequent estimation of
+\code{sigma.within} using \link[intRvals]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
 and \code{iter} set the threshold for convergence and the maximum number of iterations.
 
 We note that an exponential interval model can be fitted by setting \code{fpp=1} and \code{fpp.method=fixed}.

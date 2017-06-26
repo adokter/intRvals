@@ -1,11 +1,11 @@
 #' Analysing time-ordered event data with missed observations
 #'
-#' \pkg{intRval} calculates means and variances of arrival intervals (and arrival rates)
+#' \pkg{intRvals} calculates means and variances of arrival intervals (and arrival rates)
 #' corrected for missed arrival observations, and compares means
 #'  and variances of groups of interval data.
 #' @details
 #' \subsection{General}{
-#' The central function of package \pkg{intRval} is
+#' The central function of package \pkg{intRvals} is
 #' \code{\link{estinterval}}, which is used to estimate the
 #' mean arrival interval (and its standard deviation) from interval
 #' data with missed arrivals. This is
@@ -25,9 +25,9 @@
 #' \subsection{Typical workflow}{
 #' \enumerate{
 #'   \item{Fit interval model \code{m} to an interval dataset \code{d} using \code{\link{estinterval}}, as in \code{m=estinterval(d)}}.
-#'   \item{Visually inspect model fits using \code{\link{plot.intRval}}, as in \code{plot(m)}}.
-#'   \item{Use \code{\link{anova.intRval}} to check whether the missed event probability was signficantly different from zero, as in \code{anova(m)}.}
-#'   \item{Also use \code{\link{anova.intRval}} to perform model selection between competing models \code{m1},\code{m2} for the same interval dataset \code{d}, as in \code{anova(m1,m2)}.}
+#'   \item{Visually inspect model fits using \code{\link{plot.intRvals}}, as in \code{plot(m)}}.
+#'   \item{Use \code{\link{anova.intRvals}} to check whether the missed event probability was signficantly different from zero, as in \code{anova(m)}.}
+#'   \item{Also use \code{\link{anova.intRvals}} to perform model selection between competing models \code{m1},\code{m2} for the same interval dataset \code{d}, as in \code{anova(m1,m2)}.}
 #'   \item{Compare means and variances between different interval datasets \code{d1},\code{d2} using \code{\link{ttest}} and \code{\link{vartest}}.}
 #' }
 #' }
@@ -63,7 +63,7 @@
 #> [1] "_PACKAGE"
 
 ## to generate pdf of the manual do:
-# R CMD Rd2pdf '/Library/Frameworks/R.framework/Versions/3.3/Resources/library/intRval'
+# R CMD Rd2pdf '/Library/Frameworks/R.framework/Versions/3.3/Resources/library/intRvals'
 
 ## Note: convergence is still conditional on the starting values provided by users:
 # this works:
@@ -85,8 +85,8 @@ MidPoints=as.POSIXct(c("2013-3-19", "2013-4-2", "2013-4-15", "2013-4-29", "2013-
 #goosedrop[goosedrop$date>=MidPoints[3] & goosedrop$date<MidPoints[4],]$period=3
 #goosedrop[goosedrop$date>=MidPoints[4] & goosedrop$date<MidPoints[5],]$period=4
 #goosedrop[goosedrop$date>=MidPoints[5],]$period=5
-#save(goosedrop,file="~/git/R/intRval/data/goosedrop.RData")
-#load("~/git/R/intRval/data/goosedrop.RData")
+#save(goosedrop,file="~/git/R/intRvals/data/goosedrop.RData")
+#load("~/git/R/intRvals/data/goosedrop.RData")
 #' Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)
 #'
 #' The dataset contains observations from two sites: the island of Schiermonnikoog (saltmarsh) and Terschelling (agricultural grassland).
@@ -316,7 +316,7 @@ logliknull2WB=function(params,data,N=5L,fun=gammai,funcdf=gammapi,trunc=c(0,Inf)
 #' @param trunc Use a truncated probability density function with range \code{trunc}
 #' @param fpp Baseline proportion of intervals distributed as a random poisson process with mean arrival interval \code{mu}
 #' @details
-#' Refer to \link[intRval]{intervalpdf} for details on the functional form of
+#' Refer to \link[intRvals]{intervalpdf} for details on the functional form of
 #' the probability density function of an observed interval distribution \eqn{\phi_{obs}}.
 #' The log-likelihood \eqn{L} given a set of intervals {\eqn{x_j}} in \code{data} is given by
 #' \deqn{L(\mu,\sigma,p)=\log \sum_j \phi_{obs}(x_j | \mu,\sigma,p)}
@@ -341,9 +341,9 @@ loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
   loglik(data=data,mu=mu,sigma=sigma,p=p,N=N,fun=funpdf,funcdf=funcdf,trunc=trunc,fpp=fpp)
 }
 
-#' Plot an interval histogram and fit of intRval object
+#' Plot an interval histogram and fit of intRvals object
 #'
-#' @param x An intRval class object
+#' @param x An intRvals class object
 #' @param binsize Width of the histogram bins
 #' @param line.col Color of the plotted curve for the model fit
 #' @param line.lwd Line width of the plotted curve for the model fit
@@ -358,9 +358,9 @@ loglikinterval=function(data,mu,sigma,p,N=5L,fun="gamma",trunc=c(0,Inf),fpp=0){
 #' dr=estinterval(goosedrop$interval)
 #' plot(dr)
 #' plot(dr,binsize=10,line.col='blue')
-plot.intRval=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', line.lwd=1, ...){
+plot.intRvals=function(x,binsize=20,xlab="Interval",ylab="Density",main="Interval histogram and fit", line.col='red', line.lwd=1, ...){
   object=x
-  stopifnot(inherits(object, "intRval"))
+  stopifnot(inherits(object, "intRvals"))
   if(object$distribution=="normal"){
     funpdf=normi
     funcdf=normpi
@@ -470,7 +470,7 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' Estimate interval model accounting for missed arrival observations
 #'
 #' Estimate interval mean and variance accounting for missed arrival observations,
-#' by fitting the probability density function \link[intRval]{intervalpdf} to the interval data.
+#' by fitting the probability density function \link[intRvals]{intervalpdf} to the interval data.
 #' @param data A numeric list of intervals.
 #' @param mu Start value for the numeric optimization for the mean arrival interval.
 #' @param sigma Start value for the numeric optimization for the standard deviation of the arrival interval.
@@ -489,36 +489,36 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' @param group optional vector of equal length as data, indicating the group or subject in which the interval was observed
 #' @param sigma.within optional within-subject standard deviation. When equal to default 'NA', assumes
 #' no additional between-subject effect, with \code{sigma.within} equal to \code{sigma}. When equal to 'auto'
-#' an estimate is provided by iteratively calling \link[intRval]{partition}
+#' an estimate is provided by iteratively calling \link[intRvals]{partition}
 #' @param iter maximum number of iterations in numerical iteration for \code{sigma.within}
 #' @param tol tolerance in the iteration, when \code{sigma.within} changes less than this value in one iteration step, the optimization is considered converged.
 #' @param silent logical. When \code{TRUE} print no information to console
 #' @param ... Additional arguments to be passed to \link[stats]{optim}
 #' @details
-#' The probability density function for observed intervals \link[intRval]{intervalpdf}
+#' The probability density function for observed intervals \link[intRvals]{intervalpdf}
 #' is fit to \code{data} by maximization of the
 #' associated log-likelihood using \link[stats]{optim}.
 #'
-#' Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRval]{intervalpdf} on the interval data.
-#' In the iteration \link[intRval]{partition} is used to (1) determine which intervals according to the fit are a fundamental interval at a confidence level \code{conf.level},
+#' Within-group variation \code{sigma.within} may be separated from the total variation \code{sigma} in an iterative fit of \link[intRvals]{intervalpdf} on the interval data.
+#' In the iteration \link[intRvals]{partition} is used to (1) determine which intervals according to the fit are a fundamental interval at a confidence level \code{conf.level},
 #' and (2) to partition the within-group variation from the total variation in interval length.
 #'
 #' Within- and between-group variation is estimated on the subset of fundamental intervals with repeated measures only.
-#' As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
-#' \code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
+#' As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRvals]{intervalpdf} and the subsequent estimation of
+#' \code{sigma.within} using \link[intRvals]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
 #' and \code{iter} set the threshold for convergence and the maximum number of iterations.
 #'
 #' We note that an exponential interval model can be fitted by setting \code{fpp=1} and \code{fpp.method=fixed}.
 #' @export
-#' @return This function returns an object of class \code{intRval}, which is a list containing the following:
+#' @return This function returns an object of class \code{intRvals}, which is a list containing the following:
 #' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mu}}{the modelled mean interval}
 #'   \item{\code{mu.se}}{the modelled mean interval standard error}
 #'   \item{\code{sigma}}{the modelled interval standard deviation}
 #'   \item{\code{p}}{the modelled probability to not observe an arrival}
-#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
-#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
+#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRvals]{intervalpdf}}
+#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRvals]{intervalpdf}}
 #'   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
 #'   \item{\code{counts}}{counts field of \link[stats]{optim}}
 #'   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a missed event probability (i.e. \code{p}=0)}
@@ -629,7 +629,7 @@ estintervalHelper=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun=
     warning("no support for a model including a miss probability relative to a model without a miss probability at specified confidence level.\n\nCheck convergence using different starting values (arguments: mu,sigma and p).\nConsider including a random poisson process background (argument: fpp),\nor changing the interval distribution (argument: fun).")
   }
 
-  class(out)="intRval"
+  class(out)="intRvals"
   out
 }
 
@@ -649,21 +649,21 @@ fundamentalProb = function(x,mu,sigma,p,fpp,N,fun){
 #'
 #' Estimates which intervals in a dataset are fundamental intervals, i.e. an
 #' interval not containing a missed arrival observation
-#' @param x object inheriting from class \code{intRval}, usually a result of a call to \code{\link[intRval]{estinterval}}
+#' @param x object inheriting from class \code{intRvals}, usually a result of a call to \code{\link[intRvals]{estinterval}}
 #' @param conf.level confidence level for identifying intervals as fundamental
 #' @return logical atomic vector of the same length as \code{x$data}
 #' @details
 #' This functions thus determines for each interval \code{x$data} whether it has a probabiliy > \code{conf.level} to be
-#' a fundamental interval, given the model fit generated by \link[intRval]{estinterval} for object \code{x}.
+#' a fundamental interval, given the model fit generated by \link[intRvals]{estinterval} for object \code{x}.
 #'
-#' The fit of an \code{intRval} object gives the decomposition of the likelihood of an interval observation
-#' into partial likelihoods \eqn{\phi_{obs}(x,i | \mu, \sigma, p)} (see \link[intRval]{intervalpdf}).
+#' The fit of an \code{intRvals} object gives the decomposition of the likelihood of an interval observation
+#' into partial likelihoods \eqn{\phi_{obs}(x,i | \mu, \sigma, p)} (see \link[intRvals]{intervalpdf}).
 #' If the amplitude of the partial likelihood with i=0 (i.e. the likelihood component without missed observations)
 #' is at least a proportion \code{conf.level} of the sum of all terms i=0..N,
 #' an interval is considered to be fundamental (not containing a missed event observation).
 #' @export
 fundamental = function(x, conf.level=0.9){
-  stopifnot(inherits(x,"intRval"))
+  stopifnot(inherits(x,"intRvals"))
   if(x$distribution=="gamma") fun = gammai
   else fun = normi
   output=sapply(x$data,function(ival) fundamentalProb(ival,x$mu,x$sigma,x$p,x$fpp,x$N,fun)>conf.level)
@@ -755,7 +755,7 @@ intervalsim=function(n=500,mu=200,sigma=40,p=0.3,fun="gamma",trunc=c(0,600),fpp=
 
 #' Conversion of interval estimates to rates
 #'
-#' @param data An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param data An object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @param minint the minimum interval value from which numerical integrations converting to rates are started
 #' @param maxint the maximum interval value up to which numerical integrations converting to rates are continued
 #' @param digits the number of digits for printing to screen
@@ -806,7 +806,7 @@ intervalsim=function(n=500,mu=200,sigma=40,p=0.3,fun="gamma",trunc=c(0,600),fpp=
 #' interval2rate(dr)
 interval2rate=function(data,minint=data$mu/100,maxint=data$mu+3*data$sigma,digits = max(3L, getOption("digits") - 3L), method="exact"){
   if (!(method=="exact" || method=="taylor")) stop("method needs to be either 'exact' or 'taylor'")
-  stopifnot(inherits(data, "intRval"))
+  stopifnot(inherits(data, "intRvals"))
   if(method=="exact"){
     if(data$distribution=="normal"){
       cat(paste("Numerically calculating rate mean and standard deviation\n  truncating normal distribution of intervals over range",format(signif(minint,digits)),"to",format(signif(maxint,digits)),"\n"))
@@ -858,14 +858,14 @@ foldInterval=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
 
 #' Folds observed arrival intervals with missed observations back to their most likely fundamental interval
 #' @title Folds observed arrival intervals to a fundamental interval
-#' @param object an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param object an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @param take.sample when \code{TRUE} the number of folds of the fundamental interval is sampled randomly, taking into account the probability weight of each possibility. When \code{FALSE} the fold with the highest probability weight is taken.
-#' @param sigma.within (optional) numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRval]{partition}.
+#' @param sigma.within (optional) numeric value with an assumed within-group/subject standard deviation, or '\code{auto}' to estimate it automatically using \link[intRvals]{partition}.
 #' @param silent logical, if \code{TRUE} print no text to console
 #' @export
 #' @details
 #' Arrival intervals containing missed observations are folded to their most likely
-#' fundamental interval according to a fit of the distribution of intervals by \link[intRval]{estinterval}.
+#' fundamental interval according to a fit of the distribution of intervals by \link[intRvals]{estinterval}.
 #'
 #' There is inherent uncertainty on how many missed arrival events an observed interval contains, and therefore to
 #' which fundamental interval it should be folded. Intervals folded to the fundamental
@@ -878,18 +878,18 @@ foldInterval=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
 #' Intervals \code{x} are transformed to their fundamental interval according to
 #' \deqn{\mu+(x-i*\mu)/\sqrt i}{\mu+(x-i*\mu)/\sqrt i}
 #' with \code{i-1} the estimated number of missed observations within the interval. This transformation scales appropriately
-#' with the expected broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRval]{intervalpdf}.
+#' with the expected broadening of the standard distributions \eqn{\phi(x | i \mu,\sqrt i \sigma)} with \code{i} in \link[intRvals]{intervalpdf}.
 #'
-#' When no \code{sigma.within} is provided, \eqn{\mu} equals the mean arrival rate, estimated by \link[intRval]{estinterval}.
+#' When no \code{sigma.within} is provided, \eqn{\mu} equals the mean arrival rate, estimated by \link[intRvals]{estinterval}.
 #'
-#' When \code{sigma.within} is '\code{auto}', \code{sigma.within} is estimated using \link[intRval]{partition}.
+#' When \code{sigma.within} is '\code{auto}', \code{sigma.within} is estimated using \link[intRvals]{partition}.
 #'
 #' When \code{sigma.within} is a user-specified numeric value or '\code{auto}', \eqn{\mu} is estimated for each group (
-#' as specified in the group argument of \link[intRval]{estinterval}),
-#' by maximizing the log-likelihood of \link[intRval]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
+#' as specified in the group argument of \link[intRvals]{estinterval}),
+#' by maximizing the log-likelihood of \link[intRvals]{intervalpdf}, with its \code{data} argument equals to the intervals of the group,
 #' its \code{sigma} argument equal to \code{sigma.within}, and its remaining arguments taken from \code{object}.
 #'
-#' Intervals assigned to the \code{fpp} component (see \link[intRval]{estinterval}) are not
+#' Intervals assigned to the \code{fpp} component (see \link[intRvals]{estinterval}) are not
 #' folded, and return as \code{NA} values.
 #'
 #' @return numeric vector with intervals folded into the fundamental interval
@@ -903,7 +903,7 @@ foldInterval=function(x,mu,sigma,p,fpp,N=5L,fun=normi,take.sample=F){
 #' # while accounting for within-group variation:
 #' interval.fundamental=fold(dr,sigma.within='auto')
 fold=function(object, take.sample=F, sigma.within=NA,silent=F){
-  stopifnot(inherits(object, "intRval"))
+  stopifnot(inherits(object, "intRvals"))
   if(!is.na(sigma.within)){
     if(length(object$group)==1 && is.na(object$group)) stop("no groups found in object")
     if(!(length(object$group)==length(object$data))) stop("'group' and 'data' are of unequal length")
@@ -942,20 +942,20 @@ fold=function(object, take.sample=F, sigma.within=NA,silent=F){
 }
 
 
-#' summary method for class \code{intRval}
+#' summary method for class \code{intRvals}
 #'
-#' @param object An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param object An object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @param ... further arguments passed to or from other methods.
 #' @export
-#' @return The function \code{summary.intRval} computes and returns a list of summary statistics
+#' @return The function \code{summary.intRvals} computes and returns a list of summary statistics
 #' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mu}}{the modelled mean interval}
 #'   \item{\code{mu.se}}{the modelled mean interval standard error}
 #'   \item{\code{sigma}}{the modelled interval standard deviation}
 #'   \item{\code{p}}{the modelled probability to not observe an arrival}
-#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
-#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRval]{intervalpdf}}
+#'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRvals]{intervalpdf}}
+#'   \item{\code{N}}{the highest number of consecutive missed arrivals taken into account, see \link[intRvals]{intervalpdf}}
 #'   \item{\code{convergence}}{convergence field of \link[stats]{optim}}
 #'   \item{\code{counts}}{counts field of \link[stats]{optim}}
 #'   \item{\code{loglik}}{vector of length 2, with first element the log-likelihood of the fitted model, and second element the log-likelihood of the model without a missed event probability (i.e. \code{p}=0)}
@@ -973,22 +973,22 @@ fold=function(object, take.sample=F, sigma.within=NA,silent=F){
 #' data(goosedrop)
 #' dr=estinterval(goosedrop$interval)
 #' summary(dr)
-summary.intRval=function(object, ...){
-  stopifnot(inherits(object, "intRval"))
+summary.intRvals=function(object, ...){
+  stopifnot(inherits(object, "intRvals"))
   xx=object
   xx$deviance=c(2*(xx$loglik[1]-xx$loglik[2]),abs(2*xx$loglik[1]))
   xx$p.value=c(pchisq(xx$deviance[1], df=xx$df.residual[1], lower.tail=FALSE),pchisq(xx$deviance[2], df=xx$df.residual[2], lower.tail=FALSE))
-  class(xx)="summary.intRval"
+  class(xx)="summary.intRvals"
   xx
 }
 
-#' print method for class \code{intRval}
+#' print method for class \code{intRvals}
 #'
-#' @param x An object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @param x An object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @keywords internal
 #' @export
-print.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
-  stopifnot(inherits(x, "intRval"))
+print.intRvals=function(x,digits = max(3L, getOption("digits") - 3L), ...){
+  stopifnot(inherits(x, "intRvals"))
   cat("Analysis of arrival interval data with missed arrival observations\n\n")
   cat("          number of intervals: ",format(signif(length(x$data),digits)),"\n\n")
   cat("        mean arrival interval: ",format(signif(x$mu,digits))," ( s.e.",format(signif(x$mu.se,max(1,digits-1))),")\n")
@@ -999,13 +999,13 @@ print.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
   }
 }
 
-#' print method for class \code{summary.intRval}
+#' print method for class \code{summary.intRvals}
 #'
-#' @param x An object of class \code{symmary.intRval}, usually a result of a call to \link[intRval]{summary.intRval}
+#' @param x An object of class \code{symmary.intRvals}, usually a result of a call to \link[intRvals]{summary.intRvals}
 #' @keywords internal
 #' @export
-print.summary.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
-  stopifnot(inherits(x, "summary.intRval"))
+print.summary.intRvals=function(x,digits = max(3L, getOption("digits") - 3L), ...){
+  stopifnot(inherits(x, "summary.intRvals"))
   cat("\nCall: ", paste(deparse(x$call), sep = "\n", collapse = "\n"), "\n\n", sep = "")
 
   cat("             mean arrival interval: ",format(signif(x$mu,digits)),"\n")
@@ -1022,10 +1022,10 @@ print.summary.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...
   cat("Likelihood ratio test, p-value: ",format(signif(x$p.value[2],digits)), "(against saturated null model)\n")
 }
 
-#' Performs one and two sample t-tests on objects of class \code{intRval}
-#' @title Student's t-test to compare two means of objects of class \code{intRval}
-#' @param x an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
-#' @param y an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' Performs one and two sample t-tests on objects of class \code{intRvals}
+#' @title Student's t-test to compare two means of objects of class \code{intRvals}
+#' @param x an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
+#' @param y an (optional) object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.
 #' @param mu a number indicating the true value of the mean (or difference in means if you are performing a two sample test).
 #' @param var.equal a logical variable indicating whether to treat the two variances as being equal. If TRUE then the pooled variance is used to estimate the variance otherwise the Welch (or Satterthwaite) approximation to the degrees of freedom is used.
@@ -1049,15 +1049,15 @@ print.summary.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...
 ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
           mu = 0, var.equal = FALSE, conf.level = 0.95)
 {
-  stopifnot(inherits(x, "intRval"))
+  stopifnot(inherits(x, "intRvals"))
   if (!is.null(y)){
-    stopifnot(inherits(y, "intRval"))
+    stopifnot(inherits(y, "intRvals"))
     if(length(x$data)!=length(y$data)){
       samedata=F
     }else{
       samedata=length(which(!(sort(x$data) == sort(y$data))))==0
     }
-    if(samedata) stop("intRval objects estimated on the same dataset")
+    if(samedata) stop("intRvals objects estimated on the same dataset")
   }
   alternative <- match.arg(alternative)
   if (!missing(mu) && (length(mu) != 1 || is.na(mu)))
@@ -1155,10 +1155,10 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
   return(rval)
 }
 
-#' Performs an F test to compare the variances of objects of class \code{intRval}
-#' @title F Test to compare two variances of objects of class \code{intRval}
-#' @param x an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
-#' @param y an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' Performs an F test to compare the variances of objects of class \code{intRvals}
+#' @title F Test to compare two variances of objects of class \code{intRvals}
+#' @param x an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
+#' @param y an (optional) object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @param alternative a character string specifying the alternative hypothesis, must be one of "\code{two.sided}" (default), "\code{greater}" or "\code{less}". You can specify just the initial letter.
 #' @param ratio the hypothesized ratio of the population variances of \code{x} and \code{y}.
 #' @param conf.level confidence level for the returned confidence interval
@@ -1180,13 +1180,13 @@ ttest = function (x, y = NULL, alternative = c("two.sided", "less", "greater"),
 vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
                                            "greater"), conf.level = 0.95)
 {
-  stopifnot(inherits(x, "intRval") && inherits(y, "intRval"))
+  stopifnot(inherits(x, "intRvals") && inherits(y, "intRvals"))
   if(length(x$data)!=length(y$data)){
     samedata=F
   }else{
     samedata=length(which(!(sort(x$data) == sort(y$data))))==0
   }
-  if(samedata) stop("intRval objects estimated on the same dataset")
+  if(samedata) stop("intRvals objects estimated on the same dataset")
   if (!((length(ratio) == 1L) && is.finite(ratio) && (ratio >
                                                       0)))
     stop("'ratio' must be a single positive number")
@@ -1231,17 +1231,17 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
   return(RVAL)
 }
 
-#' Compare model fits of \code{intRval} objects estimated on the same data.
+#' Compare model fits of \code{intRvals} objects estimated on the same data.
 #' If one object is provided, the results of a deviance test against a model without a missed event probability 'p'
 #' is reported. If two objects are provided, the results of a deviance test between the model fits of the two objects is given.
-#' @title Compares model fits of \code{intRval} objects
-#' @param object an object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
-#' @param y an (optional) object of class \code{intRval}, usually a result of a call to \link[intRval]{estinterval}
+#' @title Compares model fits of \code{intRvals} objects
+#' @param object an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
+#' @param y an (optional) object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}
 #' @param conf.level confidence level for the deviance test
 #' @param digits the number of digits for printing to screen
 #' @param ... other arguments to be passed to low level functions
 #' @export
-#' @return A list of class "\code{anova.intRval}" with the best model (1 or 2), deviance statistic and test results
+#' @return A list of class "\code{anova.intRvals}" with the best model (1 or 2), deviance statistic and test results
 #' \describe{
 #'   \item{\code{best.model}}{the index of the best model (1 is first argument, 2 is second)}
 #'   \item{\code{deviance}}{the deviance between the two tested models}
@@ -1263,16 +1263,16 @@ vartest=function (x, y, ratio = 1, alternative = c("two.sided", "less",
 #' model2=estinterval(goosedrop$interval,fun="gamma",fpp.method='auto')
 #' # model2 performs better than model1:
 #' anova(model1,model2)
-anova.intRval=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOption("digits") - 3L), ...)
+anova.intRvals=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOption("digits") - 3L), ...)
 {
   x=object
-  stopifnot(inherits(x, "intRval"))
-  if(inherits(y,"intRval") && inherits(conf.level,"intRval")) stop("can compare up to two models only")
+  stopifnot(inherits(x, "intRvals"))
+  if(inherits(y,"intRvals") && inherits(conf.level,"intRvals")) stop("can compare up to two models only")
   if(!missing(y)){
-    stopifnot(inherits(y, "intRval"))
+    stopifnot(inherits(y, "intRvals"))
     samedata=length(which(!(sort(x$data) == sort(y$data))))==0
-    if(!samedata) stop("intRval objects not estimated on the same dataset")
-    if(!(length(which(x$trunc!=y$trunc))==0)) stop("intRval objects do not have the same truncation range 'trunc'")
+    if(!samedata) stop("intRvals objects not estimated on the same dataset")
+    if(!(length(which(x$trunc!=y$trunc))==0)) stop("intRvals objects do not have the same truncation range 'trunc'")
     deviance=2*(x$loglik[1]-y$loglik[1])
     # CHECK BELOW!
     p.value=pchisq(abs(deviance), df=max(c(1,abs(x$n.param-y$n.param))), lower.tail=FALSE)
@@ -1290,18 +1290,18 @@ anova.intRval=function(object, y=NULL, conf.level = 0.95,digits = max(3L, getOpt
     output=list(best.model=bestmodel,deviance=abs(deviance),p.value=p.value,conf.level=conf.level,model1.call=x$call,model2.call="model 1 with missed event probability p fixed to zero.",
                 AIC=AIC,loglik=x$loglik)
   }
-  attr(output, "class") <- "anova.intRval"
+  attr(output, "class") <- "anova.intRvals"
   return(output)
 }
 
-#' print method for class \code{anova.intRval}
+#' print method for class \code{anova.intRvals}
 #'
-#' @param x An object of class \code{anova.intRval}, usually a result of a call to \link[intRval]{anova.intRval}
+#' @param x An object of class \code{anova.intRvals}, usually a result of a call to \link[intRvals]{anova.intRvals}
 #' @keywords internal
 #' @export
 
-print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
-  stopifnot(inherits(x, "anova.intRval"))
+print.anova.intRvals=function(x,digits = max(3L, getOption("digits") - 3L), ...){
+  stopifnot(inherits(x, "anova.intRvals"))
   cat("Model 1 call: ",deparse(x$model1.call),"\n")
   cat("Model 2 call: ",deparse(x$model2.call),"\n\n")
 
@@ -1319,8 +1319,8 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #'
 #' Estimate within-group variation in interval length
 #' @export
-#' @param x object inheriting from class \code{intRval}
-#' @param conf.level confidence level passed to function \link[intRval]{fundamental}, used in selecting fundamental intervals
+#' @param x object inheriting from class \code{intRvals}
+#' @param conf.level confidence level passed to function \link[intRvals]{fundamental}, used in selecting fundamental intervals
 #' @param alpha significance level for differences within and between groups or subjects
 #' @param silent logical, if \code{TRUE} print no text to console
 #' @return A logical atomic vector indicating which intervals are fundamental.
@@ -1336,7 +1336,7 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #' @details
 #' Within- and between-group variation is estimated on the subset of fundamental intervals only.
 #'
-#' The subset of fundamental intervals is selected using \link[intRval]{fundamental}.
+#' The subset of fundamental intervals is selected using \link[intRvals]{fundamental}.
 #'
 #' We calculate \eqn{sigma.within = s_w n_{ind}/(n_{ind}+1)} with \eqn{s_w} the uncorrected sample standard deviation
 #' of within-group centered values (obtained from subtracting the group's mean value from each observation value),
@@ -1364,7 +1364,7 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #'
 #' Bates, D., M\"{a}chler, M., Bolker, B.M. & Walker, S.C. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software, 67, 1-48.
 partition=function(x,conf.level=0.9,alpha=0.05,silent=F){
-  stopifnot(inherits(x,"intRval"))
+  stopifnot(inherits(x,"intRvals"))
   if(length(x$group)==1 && is.na(x$group)) stop("no groups found in object")
   if(!(length(x$group)==length(x$data))) stop("'group' and 'data' are of unequal length")
   #extract intervals in the fundamental
