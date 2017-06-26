@@ -1,4 +1,4 @@
-#' Analyse interval data with missed arrival observations
+#' Analysing time-ordered event data with missed observations
 #'
 #' \pkg{intRval} calculates means and variances of arrival intervals (and arrival rates)
 #' corrected for missed arrival observations, and compares means
@@ -43,10 +43,12 @@
 #' \code{\link{intervalsim}} simulates a set of observed intervals
 #'
 #' The package comes with a example interval dataset \code{\link{goosedrop}}
+#'
+#' Please cite this package using the publication "Analysing time-ordered event data with missed observations, Ecology and Evolution, 2017" by Dokter et al.
 #' }
 #'
 #' @references
-#' Dokter, A.M., et al. 2017. Statistical analysis of event data with missed observations: application in estimation of defaecation rate. Methods in Ecology and Evolution, submitted
+#' Dokter, A.M., van Loon, E.E., Fokkema, W., Lameris, T.K, , Nolet, B.A. and van der Jeugd, H.P. 2017. Analysing time-ordered event data with missed observations, Ecology and Evolution, 2017, in press.
 #'
 #' B\'{e}dard, J. & Gauthier, G. 1986. Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
 #'
@@ -54,6 +56,8 @@
 #'
 #' @import plyr
 #' @import lme4
+#' @importFrom graphics curve hist
+#' @importFrom stats anova dgamma dnorm integrate lm median optim pchisq pf pgamma plogis pnorm pt qf qt rexp rgamma rnorm runif sd setNames
 
 "_PACKAGE"
 #> [1] "_PACKAGE"
@@ -503,11 +507,14 @@ prepare.output=function(opt,fpp,p,fpp.method="fixed",p.method="auto"){
 #' As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
 #' \code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
 #' and \code{iter} set the threshold for convergence and the maximum number of iterations.
+#'
+#' We note that an exponential interval model can be fitted by setting \code{fpp=1} and \code{fpp.method=fixed}.
 #' @export
 #' @return This function returns an object of class \code{intRval}, which is a list containing the following:
 #' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mu}}{the modelled mean interval}
+#'   \item{\code{mu.se}}{the modelled mean interval standard error}
 #'   \item{\code{sigma}}{the modelled interval standard deviation}
 #'   \item{\code{p}}{the modelled probability to not observe an arrival}
 #'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
@@ -610,6 +617,8 @@ estintervalHelper=function(data,mu=median(data),sigma=sd(data)/2,p=0.2,N=5L,fun=
   out.prep=prepare.output(opt,fpp,p,fpp.method,p.method)
   # prepare output
   out=list(call=call,data=data,mu=opt$par[1],sigma=opt$par[2],p=out.prep$p,fpp=out.prep$fpp,N=N,convergence=opt$convergence,counts=opt$counts,loglik=c(opt$value,optnull$value),df.residual=c(1,length(data)-out.prep$n.opt),n.param=out.prep$n.opt,p.chisq=NA,distribution=fun,trunc=trunc,fpp.method=fpp.method,p.method=p.method,group=group,sigma.within=sigma.within,p.within=NA)
+  # add standard error of mu
+  out$mu.se=out$mu/sqrt(out$df.residual[2])
 
   if(!is.na(sigma.within) && out$sigma<sigma.within) warning("'sigma.within' too large, fit did not converge ...")
   if(out$p>0.99) warning("'p' too large, fit did not converge ...")
@@ -942,6 +951,7 @@ fold=function(object, take.sample=F, sigma.within=NA,silent=F){
 #' \describe{
 #'   \item{\code{data}}{the interval data}
 #'   \item{\code{mu}}{the modelled mean interval}
+#'   \item{\code{mu.se}}{the modelled mean interval standard error}
 #'   \item{\code{sigma}}{the modelled interval standard deviation}
 #'   \item{\code{p}}{the modelled probability to not observe an arrival}
 #'   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
@@ -981,7 +991,7 @@ print.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
   stopifnot(inherits(x, "intRval"))
   cat("Analysis of arrival interval data with missed arrival observations\n\n")
   cat("          number of intervals: ",format(signif(length(x$data),digits)),"\n\n")
-  cat("        mean arrival interval: ",format(signif(x$mu,digits)),"\n")
+  cat("        mean arrival interval: ",format(signif(x$mu,digits))," ( s.e.",format(signif(x$mu.se,max(1,digits-1))),")\n")
   cat("           standard deviation: ",format(signif(x$sigma,digits)),"\n")
   cat("              fraction missed: ",format(signif(x$p)),"\n")
   if(x$fpp.method=="auto"){
@@ -1329,8 +1339,8 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #' The subset of fundamental intervals is selected using \link[intRval]{fundamental}.
 #'
 #' We calculate \eqn{sigma.within = s_w n_{ind}/(n_{ind}+1)} with \eqn{s_w} the uncorrected sample standard deviation
-#' of within-group centered values (obtained from subtracting the group’s mean value from each observation value),
-#' and \eqn{n_{ind}/(n_{ind}+1)} Bessel’s correction with \eqn{n_{ind}} the average number of repeated measures
+#' of within-group centered values (obtained from subtracting the group's mean value from each observation value),
+#' and \eqn{n_{ind}/(n_{ind}+1)} Bessel's correction with \eqn{n_{ind}} the average number of repeated measures
 #' per group. Significance of within-group variation is determined by testing for a random effect
 #' of group against a constant null model (van de Pol & Wright 2009),
 #' using the R-package lme4 (Bates et al. 2015).
@@ -1350,9 +1360,9 @@ print.anova.intRval=function(x,digits = max(3L, getOption("digits") - 3L), ...){
 #' # at the specified confidence level alpha?
 #' output$`p<alpha`  #> TRUE
 #' @references
-#' van de Pol, M. & Wright, J. (2009). A simple method for distinguishing within- versus between-subject effects using mixed models. Animal Behaviour, 77, 753–758.
+#' van de Pol, M. & Wright, J. (2009). A simple method for distinguishing within- versus between-subject effects using mixed models. Animal Behaviour, 77, 753-758.
 #'
-#' Bates, D., Mächler, M., Bolker, B.M. & Walker, S.C. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software, 67, 1–48.
+#' Bates, D., M\"{a}chler, M., Bolker, B.M. & Walker, S.C. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software, 67, 1-48.
 partition=function(x,conf.level=0.9,alpha=0.05,silent=F){
   stopifnot(inherits(x,"intRval"))
   if(length(x$group)==1 && is.na(x$group)) stop("no groups found in object")

@@ -56,6 +56,7 @@ This function returns an object of class \code{intRval}, which is a list contain
 \describe{
   \item{\code{data}}{the interval data}
   \item{\code{mu}}{the modelled mean interval}
+  \item{\code{mu.se}}{the modelled mean interval standard error}
   \item{\code{sigma}}{the modelled interval standard deviation}
   \item{\code{p}}{the modelled probability to not observe an arrival}
   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}
@@ -89,6 +90,8 @@ Within- and between-group variation is estimated on the subset of fundamental in
 As the set of fundamental interval depends on the precise value of \code{sigma.within}, the fit of \link[intRval]{intervalpdf} and the subsequent estimation of
 \code{sigma.within} using \link[intRval]{partition} is iterated until both converge to a stable solution. Parameters \code{tol}
 and \code{iter} set the threshold for convergence and the maximum number of iterations.
+
+We note that an exponential interval model can be fitted by setting \code{fpp=1} and \code{fpp.method=fixed}.
 }
 \examples{
 data(goosedrop)

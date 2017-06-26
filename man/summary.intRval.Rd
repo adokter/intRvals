@@ -16,6 +16,7 @@ The function \code{summary.intRval} computes and returns a list of summary stati
 \describe{
   \item{\code{data}}{the interval data}
   \item{\code{mu}}{the modelled mean interval}
+  \item{\code{mu.se}}{the modelled mean interval standard error}
   \item{\code{sigma}}{the modelled interval standard deviation}
   \item{\code{p}}{the modelled probability to not observe an arrival}
   \item{\code{fpp}}{the modelled fraction of arrivals following a random poisson process, see \link[intRval]{intervalpdf}}

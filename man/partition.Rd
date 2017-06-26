@@ -36,8 +36,8 @@ Within- and between-group variation is estimated on the subset of fundamental in
 The subset of fundamental intervals is selected using \link[intRval]{fundamental}.
 
 We calculate \eqn{sigma.within = s_w n_{ind}/(n_{ind}+1)} with \eqn{s_w} the uncorrected sample standard deviation
-of within-group centered values (obtained from subtracting the group’s mean value from each observation value),
-and \eqn{n_{ind}/(n_{ind}+1)} Bessel’s correction with \eqn{n_{ind}} the average number of repeated measures
+of within-group centered values (obtained from subtracting the group's mean value from each observation value),
+and \eqn{n_{ind}/(n_{ind}+1)} Bessel's correction with \eqn{n_{ind}} the average number of repeated measures
 per group. Significance of within-group variation is determined by testing for a random effect
 of group against a constant null model (van de Pol & Wright 2009),
 using the R-package lme4 (Bates et al. 2015).
@@ -59,7 +59,7 @@ output$sigma.within
 output$`p<alpha`  #> TRUE
 }
 \references{
-van de Pol, M. & Wright, J. (2009). A simple method for distinguishing within- versus between-subject effects using mixed models. Animal Behaviour, 77, 753–758.
+van de Pol, M. & Wright, J. (2009). A simple method for distinguishing within- versus between-subject effects using mixed models. Animal Behaviour, 77, 753-758.
 
-Bates, D., Mächler, M., Bolker, B.M. & Walker, S.C. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software, 67, 1–48.
+Bates, D., M\"{a}chler, M., Bolker, B.M. & Walker, S.C. (2015). Fitting linear mixed-effects models using lme4. Journal of Statistical Software, 67, 1-48.
 }

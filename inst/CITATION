@@ -1,0 +1,11 @@
+citHeader("To cite intRval in publications, please use:")
+
+citEntry(entry = "article",
+  title = "Analysing time-ordered event data with missed observations",
+  author = c(person(c("Adriaan", "M."), "Dokter"), person(c("E.","Emiel"), c("van", "Loon")),person("Wimke", "Fokkema"),person(c("Thomas","K."), "Lameris"),person(c("Bart","A."), "Nolet"),person(c("Henk","P."), c("van","der","Jeugd"))),
+  journal="Ecology and Evolution",
+  year="2017",
+  volume="",
+  pages="in press",
+  textVersion="Dokter, A.M., van Loon, E.E., Fokkema, W., Lameris, T.K, Nolet, B.A., van der Jeugd, H.P., 2017. Analysing time-ordered event data with missed observations, Ecology and Evolution, 2017, in press."
+)

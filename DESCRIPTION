@@ -1,11 +1,11 @@
 Package: intRval
 Type: Package
-Title: Analysis of interval data with missed arrival observations
-Version: 0.1.2
-Date: 2017-06-06
-Author: Adriaan Dokter
-Maintainer: Adriaan Dokter <a.m.dokter@uva.nl>
-Description: Droprate allows you to calculate mean arrival intervals and compare means and variances of groups of interval data while accounting for missed arrival observations.
+Title: Analysis of time-ordered event data with missed observations
+Version: 1.0.0
+Date: 2017-06-26
+Author: Adriaan M. Dokter
+Maintainer: Adriaan M. Dokter <a.m.dokter@uva.nl>
+Description: intRval calculates event rates and compares means and variances of groups of interval data corrected for missed arrival observations.
 License: GNU General Public License
 Imports: plyr,lme4
 LazyData: TRUE

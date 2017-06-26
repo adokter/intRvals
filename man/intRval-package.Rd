@@ -4,7 +4,7 @@
 \name{intRval-package}
 \alias{intRval}
 \alias{intRval-package}
-\title{Analyse interval data with missed arrival observations}
+\title{Analysing time-ordered event data with missed observations}
 \description{
 \pkg{intRval} calculates means and variances of arrival intervals (and arrival rates)
 corrected for missed arrival observations, and compares means
@@ -50,10 +50,12 @@ true arrival interval.
 \code{\link{intervalsim}} simulates a set of observed intervals
 
 The package comes with a example interval dataset \code{\link{goosedrop}}
+
+Please cite this package using the publication "Analysing time-ordered event data with missed observations, Ecology and Evolution, 2017" by Dokter et al.
 }
 }
 \references{
-Dokter, A.M., et al. 2017. Statistical analysis of event data with missed observations: application in estimation of defaecation rate. Methods in Ecology and Evolution, submitted
+Dokter, A.M., van Loon, E.E., Fokkema, W., Lameris, T.K, , Nolet, B.A. and van der Jeugd, H.P. 2017. Analysing time-ordered event data with missed observations, Ecology and Evolution, 2017, in press.
 
 B\'{e}dard, J. & Gauthier, G. 1986. Assessment of faecal output in geese. Journal of Applied Ecology, 23, 77-90.
 
