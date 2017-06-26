@@ -1375,6 +1375,8 @@ partition=function(x,conf.level=0.9,alpha=0.05,silent=F){
     return(list('p<alpha'=F,sigma.within=NA,sigma=x$sigma,p.within=NA,n.within=NA,n.repeat=0,n.total=length(x$data)))
   }
   dat.fund=data.frame(interval=x$data[index],group_id=x$group[index])
+  # suppress CRAN checks on invisible binding
+  interval=NULL
   # calculate group statistics
   dat.fund=ddply(dat.fund, c("group_id"), transform, offset = scale(interval,scale=F), mean = mean(interval), n = length(interval))
   if(!silent) cat(paste("intervals in fundamental:",nrow(dat.fund),"of",length(x$data)))
