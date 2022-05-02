@@ -4,8 +4,14 @@
 \alias{ttest}
 \title{Student's t-test to compare two means of objects of class \code{intRvals}}
 \usage{
-ttest(x, y = NULL, alternative = c("two.sided", "less", "greater"),
-  mu = 0, var.equal = FALSE, conf.level = 0.95)
+ttest(
+  x,
+  y = NULL,
+  alternative = c("two.sided", "less", "greater"),
+  mu = 0,
+  var.equal = FALSE,
+  conf.level = 0.95
+)
 }
 \arguments{
 \item{x}{an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}}

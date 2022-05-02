@@ -4,8 +4,7 @@
 \alias{print.anova.intRvals}
 \title{print method for class \code{anova.intRvals}}
 \usage{
-\method{print}{anova.intRvals}(x, digits = max(3L, getOption("digits") - 3L),
-  ...)
+\method{print}{anova.intRvals}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{x}{An object of class \code{anova.intRvals}, usually a result of a call to \link[intRvals]{anova.intRvals}}

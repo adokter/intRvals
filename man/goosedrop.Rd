@@ -4,7 +4,9 @@
 \name{goosedrop}
 \alias{goosedrop}
 \title{Dataset with dropping intervals observed for foraging Brent Geese (Branta bernicla bernicla)}
-\format{An object of class \code{data.frame} with 705 rows and 7 columns.}
+\format{
+An object of class \code{data.frame} with 705 rows and 7 columns.
+}
 \usage{
 goosedrop
 }

@@ -4,8 +4,13 @@
 \alias{anova.intRvals}
 \title{Compares model fits of \code{intRvals} objects}
 \usage{
-\method{anova}{intRvals}(object, y = NULL, conf.level = 0.95,
-  digits = max(3L, getOption("digits") - 3L), ...)
+\method{anova}{intRvals}(
+  object,
+  y = NULL,
+  conf.level = 0.95,
+  digits = max(3L, getOption("digits") - 3L),
+  ...
+)
 }
 \arguments{
 \item{object}{an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}}

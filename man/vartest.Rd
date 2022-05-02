@@ -4,8 +4,13 @@
 \alias{vartest}
 \title{F Test to compare two variances of objects of class \code{intRvals}}
 \usage{
-vartest(x, y, ratio = 1, alternative = c("two.sided", "less", "greater"),
-  conf.level = 0.95)
+vartest(
+  x,
+  y,
+  ratio = 1,
+  alternative = c("two.sided", "less", "greater"),
+  conf.level = 0.95
+)
 }
 \arguments{
 \item{x}{an object of class \code{intRvals}, usually a result of a call to \link[intRvals]{estinterval}}

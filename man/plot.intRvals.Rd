@@ -4,9 +4,16 @@
 \alias{plot.intRvals}
 \title{Plot an interval histogram and fit of intRvals object}
 \usage{
-\method{plot}{intRvals}(x, binsize = 20, xlab = "Interval",
-  ylab = "Density", main = "Interval histogram and fit", line.col = "red",
-  line.lwd = 1, ...)
+\method{plot}{intRvals}(
+  x,
+  binsize = 20,
+  xlab = "Interval",
+  ylab = "Density",
+  main = "Interval histogram and fit",
+  line.col = "red",
+  line.lwd = 1,
+  ...
+)
 }
 \arguments{
 \item{x}{An intRvals class object}

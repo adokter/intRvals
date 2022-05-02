@@ -4,8 +4,17 @@
 \alias{intervalsim}
 \title{Simulate a set of observed intervals}
 \usage{
-intervalsim(n = 500, mu = 200, sigma = 40, p = 0.3, fun = "gamma",
-  trunc = c(0, 600), fpp = 0, n.ind = NA, sigma.within = NA)
+intervalsim(
+  n = 500,
+  mu = 200,
+  sigma = 40,
+  p = 0.3,
+  fun = "gamma",
+  trunc = c(0, 600),
+  fpp = 0,
+  n.ind = NA,
+  sigma.within = NA
+)
 }
 \arguments{
 \item{n}{Number of simulated interval observations.}
@@ -46,10 +55,10 @@ within- and between-group variance.
 If both \code{n.ind} and \code{sigma.within} have numeric values, intervals are simulated
 with separate within-group variation (\code{sigma.within}) and between-group variation,
 for groups of size \code{n.ind}. Intervals belonging to the same group have:
-\describe{
- \item{}{a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu}
- and between-group standard deviation \eqn{\sqrt{sigma^2 - sigma.within^2}}}
- \item{}{a within-group standard deviation in interval length equal to \code{sigma.within}}
+\itemize{
+ \item a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu}
+ and between-group standard deviation \eqn{\sqrt{sigma^2 - sigma.within^2}}
+ \item a within-group standard deviation in interval length equal to \code{sigma.within}
 }
 }
 \examples{

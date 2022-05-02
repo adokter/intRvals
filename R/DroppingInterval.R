@@ -692,10 +692,10 @@ fundamental = function(x, conf.level=0.9){
 #' If both \code{n.ind} and \code{sigma.within} have numeric values, intervals are simulated
 #' with separate within-group variation (\code{sigma.within}) and between-group variation,
 #' for groups of size \code{n.ind}. Intervals belonging to the same group have:
-#' \describe{
-#'  \item{}{a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu}
-#'  and between-group standard deviation \eqn{\sqrt{sigma^2 - sigma.within^2}}}
-#'  \item{}{a within-group standard deviation in interval length equal to \code{sigma.within}}
+#' \itemize{
+#'  \item a within-group mean interval length that has been randomly drawn from a distribution with mean \code{mu}
+#'  and between-group standard deviation \eqn{\sqrt{sigma^2 - sigma.within^2}}
+#'  \item a within-group standard deviation in interval length equal to \code{sigma.within}
 #' }
 #'
 #' @export

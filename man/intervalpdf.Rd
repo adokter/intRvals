@@ -4,9 +4,17 @@
 \alias{intervalpdf}
 \title{Probability density function of an observed interval distribution}
 \usage{
-intervalpdf(data = seq(0, 1000), mu = 200, sigma = 40, p = 0.3,
-  N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = 0,
-  sigma.within = NA)
+intervalpdf(
+  data = seq(0, 1000),
+  mu = 200,
+  sigma = 40,
+  p = 0.3,
+  N = 5L,
+  fun = "gamma",
+  trunc = c(0, Inf),
+  fpp = 0,
+  sigma.within = NA
+)
 }
 \arguments{
 \item{data}{A list of intervals for which to calculate the probability density}

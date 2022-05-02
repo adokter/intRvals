@@ -4,8 +4,7 @@
 \alias{print.summary.intRvals}
 \title{print method for class \code{summary.intRvals}}
 \usage{
-\method{print}{summary.intRvals}(x, digits = max(3L, getOption("digits") -
-  3L), ...)
+\method{print}{summary.intRvals}(x, digits = max(3L, getOption("digits") - 3L), ...)
 }
 \arguments{
 \item{x}{An object of class \code{symmary.intRvals}, usually a result of a call to \link[intRvals]{summary.intRvals}}

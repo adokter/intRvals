@@ -4,11 +4,25 @@
 \alias{estinterval}
 \title{Estimate interval model accounting for missed arrival observations}
 \usage{
-estinterval(data, mu = median(data), sigma = sd(data)/2, p = 0.2,
-  N = 5L, fun = "gamma", trunc = c(0, Inf), fpp = (if (fpp.method ==
-  "fixed") 0 else 0.1), fpp.method = "auto", p.method = "auto",
-  conf.level = 0.9, group = NA, sigma.within = NA, iter = 10,
-  tol = 0.001, silent = F, ...)
+estinterval(
+  data,
+  mu = median(data),
+  sigma = sd(data)/2,
+  p = 0.2,
+  N = 5L,
+  fun = "gamma",
+  trunc = c(0, Inf),
+  fpp = (if (fpp.method == "fixed") 0 else 0.1),
+  fpp.method = "auto",
+  p.method = "auto",
+  conf.level = 0.9,
+  group = NA,
+  sigma.within = NA,
+  iter = 10,
+  tol = 0.001,
+  silent = F,
+  ...
+)
 }
 \arguments{
 \item{data}{A numeric list of intervals.}
